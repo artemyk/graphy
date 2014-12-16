@@ -22,7 +22,10 @@ graphy module Index
 .. toctree::
    :maxdepth: 2
 
-   graphy.search
+   graphy.partitions
+   graphy.graphgen
+   graphy.plotting
+   graphy.qualityfuncs
 
 
 

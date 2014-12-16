@@ -1,10 +1,12 @@
+import numpy as np
+import networkx as nx
+import graphy
+
 mx = np.array(nx.to_numpy_matrix(nx.karate_club_graph()))
 
-qualityObj = graphy.costfunctions.Modularity(mx)
+qualityObj = graphy.qualityfuncs.Modularity(mx)
 
-opt_obj = graphy.partitions.FindOptimal(mx.shape[0], qualityObj)
-
-found_membership = opt_obj.run()
+best_membership = graphy.partitions.find_optimal(mx.shape[0], qualityObj)
 
 
 

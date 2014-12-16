@@ -6,14 +6,22 @@ import matplotlib.pylab as plt
 def to_str(membership):
     return "[" + " ".join(map(str, membership)) + "]"
 
-class FindOptimal(object):
+def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
+    """Find optimal decomposition.
 
-    def __init__(self, N, quality_func_obj, debug_level=0):
-
-        self.N = N
-        self.quality_func_obj = quality_func_obj
-        self.debug_level = debug_level
-
+    Parameters
+    ----------
+    N : int
+        size of membership vector (i.e. number of components)
+    quality_func_obj : instance of :class:`graphy.qualityfuncs.QualityFunc`
+        object that implement `quality` method that can be called on
+        membership vector.
+    initial_membership : np.array, optional
+        Initial membership assignment.  If None specified, each component is
+        assigned to separate subsystem.
+    debug_level : int, optional
+        Amount of debugging information to display
+    """
     class CommMerger(object):
         @staticmethod
         def get_elements(membership):
@@ -73,9 +81,9 @@ class FindOptimal(object):
 
                 yield prop_membership
 
-    def greedy_moves(self, membership, mover_class):
+    def greedy_moves(membership, mover_class):
         old_quality = None
-        cur_quality = self.quality_func_obj.quality(membership)
+        cur_quality = quality_func_obj.quality(membership)
 
         iter_num = 0   
         while old_quality is None or cur_quality > (old_quality + 1e-5):
@@ -94,14 +102,14 @@ class FindOptimal(object):
 
                 memb_qualities = []
                 for c in all_proposed:
-                    q = self.quality_func_obj.quality(c)
+                    q = quality_func_obj.quality(c)
                     memb_qualities.append((c, q))
 
                 best_move_membership, best_move_quality = sorted(memb_qualities, reverse=True, key=lambda x: x[1])[0] 
 
                 if best_move_quality > cur_quality: 
                     cur_quality = best_move_quality
-                    if self.debug_level >= 2:
+                    if debug_level >= 2:
                         print mover_class.__name__, "Accepted move: %s -> %s [q=%0.3f]" \
                             % (to_str(membership), to_str(best_move_membership), best_move_quality)
 
@@ -111,32 +119,34 @@ class FindOptimal(object):
             for i in range(len(membership)):
                 membership[i] = remap[membership[i]]
 
-            if self.debug_level >= 1:
+            if debug_level >= 1:
                 print "Iteration %d, #=%d quality=%5.3f (improvement=%5.3f), m=%s, cls=%s" % \
                         (iter_num, len(set(membership)), cur_quality, cur_quality - old_quality, to_str(membership), mover_class.__name__)
                 
         return membership, cur_quality
     
-    def run(self, initial_membership = None):
-        if initial_membership is None:
-            membership = np.arange(self.N, dtype='int32')
-        else:
-            membership = initial_membership.copy()
+    # ***************************************************
+    # Main function body
+    # ***************************************************
+    if initial_membership is None:
+        membership = np.arange(N, dtype='int32')
+    else:
+        membership = initial_membership.copy()
 
-        for i in range(2):
-            if self.debug_level >= 1:
-                print "*** Run through %d ***" % i
+    for i in range(2):
+        if debug_level >= 1:
+            print "*** Run through %d ***" % i
 
-            old_quality, cur_quality = None, None
+        old_quality, cur_quality = None, None
 
-            while old_quality is None or cur_quality >= (old_quality + 1e-5):
-                old_quality = cur_quality
-                membership, cur_quality = self.greedy_moves(membership, mover_class=self.NodeMover)
-                membership, cur_quality = self.greedy_moves(membership, mover_class=self.NodeSwapper)
-                membership, cur_quality = self.greedy_moves(membership, mover_class=self.CommMerger)
-                membership, cur_quality = self.greedy_moves(membership, mover_class=self.CommSpliter)
+        while old_quality is None or cur_quality >= (old_quality + 1e-5):
+            old_quality = cur_quality
+            membership, cur_quality = greedy_moves(membership, mover_class=NodeMover)
+            membership, cur_quality = greedy_moves(membership, mover_class=NodeSwapper)
+            membership, cur_quality = greedy_moves(membership, mover_class=CommMerger)
+            membership, cur_quality = greedy_moves(membership, mover_class=CommSpliter)
 
-        return membership
+    return membership
 
 
 def get_minsize_assignment(N, min_comm_size):
