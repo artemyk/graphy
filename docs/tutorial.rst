@@ -23,6 +23,4 @@ Each node updates itself as a Boolean function of other nodes (it's 'inputs').
 We can also get blah:
 
 >>> import graphy
->>> print graphy.search
-blah
 

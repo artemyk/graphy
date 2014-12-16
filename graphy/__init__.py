@@ -1,4 +1,6 @@
 from .version import __version__
 
-# from . import pkg_module
+from . import partitions
+from . import graphgen
+from . import plotting
 

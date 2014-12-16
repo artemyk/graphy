@@ -38,6 +38,7 @@ required_packages = [
     REQUIRED_NUMPY,
     'scipy>=0.13',
     'six>=1.8.0',
+    'networkx',
 ]
 tests_require = [
     'coverage>=3.7.0',
