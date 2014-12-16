@@ -8,5 +8,5 @@ qualityObj = graphy.qualityfuncs.Modularity(mx)
 
 best_membership = graphy.partitions.find_optimal(mx.shape[0], qualityObj)
 
-nx.draw(nx.from_numpy_matrix(mx), node_color=best_membership)
+#nx.draw(nx.from_numpy_matrix(mx), node_color=best_membership)
 
