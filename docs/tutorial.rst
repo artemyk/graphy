@@ -1,26 +1,17 @@
 graphy tutorial
 ==============
 
-Introduction
-------------
-
-graphy information here.
-
-
 Example
 -------------------------
 
+Let's find a high-modularity decomposition of the karate-club network.
 Boolean network are a type of discrete-state, discrete-time dynamical system.  
 Each node updates itself as a Boolean function of other nodes (it's 'inputs').
 
-:doc:`graphy.search` implements search over decompositions 
+:doc:`graphy.partitions` implements search over decompositions.
 
 
-.. plot:: test_pyplots/plot1.py
+.. plot:: test_pyplots/karate.py
    :include-source:
 
-
-We can also get blah:
-
->>> import graphy
 
