@@ -5,10 +5,11 @@ Example
 -------------------------
 
 Let's find a high-modularity decomposition of the karate-club network.
-Boolean network are a type of discrete-state, discrete-time dynamical system.  
-Each node updates itself as a Boolean function of other nodes (it's 'inputs').
 
-:doc:`graphy.partitions` implements search over decompositions.
+:doc:`graphy.partitions` implements search over decompositions.  After getting
+a matrix, we need to create a cost function object (a subclass of from 
+:doc:`graphy.costfunctions.CostFunction`), then pass it into 
+:doc:`graphy.partitions.FindOptimal`.
 
 
 .. plot:: test_pyplots/karate.py
