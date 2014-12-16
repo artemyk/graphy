@@ -1,12 +1,19 @@
+"""Module implements quality functions for graph decompositions.
+"""
+
 import numpy as np
 
 
 class QualityFunction(object):
 	def __init__(self):
+		"""Implements a quality function.
+		"""
 		# precompute quantities here
 		pass
 
-	def cost(self, membership):
+	def quality(self, membership):
+		"""Returns a quality score corresponding to membership vector. 
+		"""
 		raise NotImplementedError
 		
 class Modularity(QualityFunction):
