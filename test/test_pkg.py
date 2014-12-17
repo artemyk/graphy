@@ -9,7 +9,7 @@ import numpy as np
 import graphy
 
 
-def test_partition_search_karate():
+def test_partition_search():
 	#mx = np.array(nx.to_numpy_matrix(nx.karate_club_graph()),dtype='float')
 	
 	ground_truth = np.asarray([0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1])
