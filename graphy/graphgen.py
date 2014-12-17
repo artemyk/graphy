@@ -1,3 +1,7 @@
+from __future__ import division, print_function, absolute_import
+import six
+range = six.moves.range
+
 import networkx as nx
 import numpy as np
 

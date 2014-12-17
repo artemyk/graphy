@@ -1,3 +1,7 @@
+from __future__ import division, print_function, absolute_import
+import six
+range = six.moves.range
+
 import numpy as np
 import random
 import networkx as nx
@@ -56,7 +60,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
     class NodeMover(object):
         @staticmethod
         def get_elements(membership):
-            return range(len(membership))
+            return list(range(len(membership)))
 
         @staticmethod
         def prop_memberships(el, membership):
@@ -110,8 +114,10 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
                 if best_move_quality > cur_quality: 
                     cur_quality = best_move_quality
                     if debug_level >= 2:
-                        print mover_class.__name__, "Accepted move: %s -> %s [q=%0.3f]" \
-                            % (to_str(membership), to_str(best_move_membership), best_move_quality)
+                        print(mover_class.__name__, 
+                              "Accepted move: %s -> %s [q=%0.3f]"
+                              % (to_str(membership), to_str(best_move_membership), best_move_quality)
+                             )
 
                     membership = best_move_membership
 
@@ -120,8 +126,10 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
                 membership[i] = remap[membership[i]]
 
             if debug_level >= 1:
-                print "Iteration %d, #=%d quality=%5.3f (improvement=%5.3f), m=%s, cls=%s" % \
-                        (iter_num, len(set(membership)), cur_quality, cur_quality - old_quality, to_str(membership), mover_class.__name__)
+                print(mover_class.__name__, 
+                      "Iteration %d, #=%d quality=%5.3f (improvement=%5.3f), m=%s, cls=%s" %
+                      (iter_num, len(set(membership)), cur_quality, cur_quality - old_quality, to_str(membership))
+                     )
                 
         return membership, cur_quality
     
@@ -135,7 +143,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
 
     for i in range(2):
         if debug_level >= 1:
-            print "*** Run through %d ***" % i
+            print("*** Run through %d ***" % i)
 
         old_quality, cur_quality = None, None
 
@@ -167,13 +175,13 @@ def remap2match(partition1, partition2):
     nmap = {}
     to_remap = set(partition1)
     gtlist = partition2.tolist() if isinstance(partition2, np.ndarray) else partition2
-    allowed_matches = set(gtlist + range(partition2.max()+1,partition2.max()+len(partition1)))
+    allowed_matches = set(gtlist + list(range(partition2.max()+1,partition2.max()+len(partition1))))
     while len(to_remap):
         max_overlap, saved_pair = None, None
         for c1 in to_remap:
             for c2 in allowed_matches:
                 overlap = np.logical_and(partition1 == c1, partition2 == c2).sum()
-                if overlap > max_overlap:
+                if max_overlap is None or overlap > max_overlap:
                     max_overlap = overlap
                     saved_pair = (c1, c2)
         old_c, new_c = saved_pair

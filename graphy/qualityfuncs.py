@@ -1,6 +1,10 @@
 """Module implements quality functions for graph decompositions.
 """
 
+from __future__ import division, print_function, absolute_import
+import six
+range = six.moves.range
+
 import numpy as np
 
 
