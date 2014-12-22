@@ -55,3 +55,23 @@ def get_block_matrix(membership, intra_community_p, inter_community_p):
             mx[r,ixs] = np.random.rand(comm_size) > (1-intra_community_p)
     np.fill_diagonal(mx, 0)
     return mx
+
+def get_barbell_matrix(membership, num_conns=1):
+    membership = np.asarray(membership)
+    comms = list(set(membership))
+    N  = len(membership)
+    mx = np.zeros(shape=(N,N))
+    for ndx1, comm in enumerate(comms):
+        ixs = np.flatnonzero(membership == comm)
+        for r in ixs:
+            mx[r,ixs] = 1
+        for ndx2, othercomm in enumerate(comms):
+            if ndx1 == ndx2:
+                continue
+            ixs2 = np.flatnonzero(membership == othercomm)
+            for cndx in range(num_conns):
+                mx[ixs[cndx], ixs2[cndx]] = 1
+                mx[ixs2[cndx], ixs[cndx]] = 1
+    np.fill_diagonal(mx, 0)
+    return mx
+

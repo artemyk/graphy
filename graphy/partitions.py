@@ -127,7 +127,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
 
             if debug_level >= 1:
                 print(mover_class.__name__, 
-                      "Iteration %d, #=%d quality=%5.3f (improvement=%5.3f), m=%s, cls=%s" %
+                      "Iteration %d, #=%d quality=%5.3f (improvement=%5.3f), m=%s" %
                       (iter_num, len(set(membership)), cur_quality, cur_quality - old_quality, to_str(membership))
                      )
                 
