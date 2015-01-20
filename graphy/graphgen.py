@@ -153,12 +153,12 @@ def get_barbell_matrix(membership, num_conns=1):
     """Get a matrix corresponding to completely-connected communities
     connected by paths.
 
-    For example:
-
-    >>> from graphy import graphgen
-    >>> cmx = graphgen.get_barbell_matrix([0,0,0,0,0,1,1,1,1,1])
-    >>> import matplotlib.pylab as plt
-    >>> plt.imshow(cmx, interpolation='none') # doctest: +SKIP
+    ..plot::
+        For example:
+        >>> from graphy import graphgen
+        >>> cmx = graphgen.get_barbell_matrix([0,0,0,0,0,1,1,1,1,1])
+        >>> import matplotlib.pylab as plt
+        >>> plt.imshow(cmx, interpolation='none') # doctest: +SKIP
 
 
     Parameters
