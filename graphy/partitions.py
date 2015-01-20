@@ -10,7 +10,7 @@ import matplotlib.pylab as plt
 def to_str(membership):
     return "[" + " ".join(map(str, membership)) + "]"
 
-def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
+def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0, cache=True):
     """Find optimal decomposition.
 
     Parameters
@@ -26,6 +26,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
     debug_level : int, optional
         Amount of debugging information to display
     """
+
     class CommMerger(object):
         @staticmethod
         def get_elements(membership):
@@ -85,9 +86,14 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
 
                 yield prop_membership
 
+    _done = set()
+    def get_quality(membership):
+        _done.add(tuple(membership.tolist()))
+        return quality_func_obj.quality(membership)
+
     def greedy_moves(membership, mover_class):
         old_quality = None
-        cur_quality = quality_func_obj.quality(membership)
+        cur_quality = get_quality(membership)
 
         iter_num = 0   
         while old_quality is None or cur_quality > (old_quality + 1e-5):
@@ -97,7 +103,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
 
             for v in elements:
 
-                all_proposed = list(mover_class.prop_memberships(v, membership))
+                all_proposed = [m for m in mover_class.prop_memberships(v, membership) if tuple(m.tolist()) not in _done]
 
                 if not len(all_proposed):
                     continue
@@ -106,7 +112,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
 
                 memb_qualities = []
                 for c in all_proposed:
-                    q = quality_func_obj.quality(c)
+                    q = get_quality(c)
                     memb_qualities.append((c, q))
 
                 best_move_membership, best_move_quality = sorted(memb_qualities, reverse=True, key=lambda x: x[1])[0] 
@@ -114,7 +120,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
                 if best_move_quality > cur_quality: 
                     cur_quality = best_move_quality
                     if debug_level >= 2:
-                        print(mover_class.__name__, 
+                        print(mover_class.__name__.ljust(15), 
                               "Accepted move: %s -> %s [q=%0.3f]"
                               % (to_str(membership), to_str(best_move_membership), best_move_quality)
                              )
@@ -126,7 +132,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
                 membership[i] = remap[membership[i]]
 
             if debug_level >= 1:
-                print(mover_class.__name__, 
+                print(mover_class.__name__.ljust(15), 
                       "Iteration %d, #=%d quality=%5.3f (improvement=%5.3f), m=%s" %
                       (iter_num, len(set(membership)), cur_quality, cur_quality - old_quality, to_str(membership))
                      )
@@ -149,9 +155,9 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
 
         while old_quality is None or cur_quality >= (old_quality + 1e-5):
             old_quality = cur_quality
+            membership, cur_quality = greedy_moves(membership, mover_class=CommMerger)
             membership, cur_quality = greedy_moves(membership, mover_class=NodeMover)
             membership, cur_quality = greedy_moves(membership, mover_class=NodeSwapper)
-            membership, cur_quality = greedy_moves(membership, mover_class=CommMerger)
             membership, cur_quality = greedy_moves(membership, mover_class=CommSpliter)
 
     return membership
