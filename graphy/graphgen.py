@@ -141,7 +141,7 @@ def get_weighted_block_matrix(membership, intra_community_w, inter_community_w):
 
     membership = np.asarray(membership)
     N  = len(membership)
-    mx = np.random.zeros(shape=(N,N)) + inter_community_w
+    mx = np.zeros(shape=(N,N)) + inter_community_w
     for comm in set(membership):
         ixs = np.flatnonzero(membership == comm)
         for r in ixs:
