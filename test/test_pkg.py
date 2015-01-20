@@ -13,7 +13,7 @@ def test_partition_search():
 	#mx = np.array(nx.to_numpy_matrix(nx.karate_club_graph()),dtype='float')
 	
 	ground_truth = np.asarray([0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1])
-	mx = graphy.graphgen.get_block_matrix(ground_truth, 0.7, 0.1)
+	mx = graphy.graphgen.get_binary_block_matrix(ground_truth, 0.7, 0.1)
 
 	qualityObj = graphy.qualityfuncs.Modularity(mx)
 
