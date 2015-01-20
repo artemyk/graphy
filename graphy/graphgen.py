@@ -53,7 +53,6 @@ def get_hierarchical_pos(net):
     >>> from graphy import graphgen
     >>> G = graphgen.hierarchical(3, 2)
     >>> pos = graphgen.get_hierarchical_pos(G)
-    ...
 
     Parameters
     ----------
@@ -89,7 +88,6 @@ def get_block_matrix(membership, intra_community_p, inter_community_p):
 
     >>> from graphy import graphgen
     >>> cmx = graphgen.get_block_matrix([0,0,0,0,0,1,1,1,1,1], 0.5, 0.1)
-    ...
 
     Parameters
     ----------
@@ -125,6 +123,9 @@ def get_barbell_matrix(membership, num_conns=1):
 
     >>> from graphy import graphgen
     >>> cmx = graphgen.get_barbell_matrix([0,0,0,0,0,1,1,1,1,1])
+    >>> import matplotlib.pylab as plt
+    >>> plt.imshow(cmx, interpolation='none') # doctest: +SKIP
+
 
     Parameters
     ----------
