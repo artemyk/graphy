@@ -16,6 +16,10 @@ def hierarchical(n, level):
     level : int
         Number of hierarchical levels to create
 
+    Returns
+    -------
+    networkx graph
+
     """
 
     if level == 0:
@@ -56,6 +60,11 @@ def get_hierarchical_pos(net):
     net : networkx graph
         Graph whose nodes to layout
 
+    Returns
+    -------
+    dict 
+        Dictionary containing node:(x,y) entries
+
     """
 
     pos = {}
@@ -73,6 +82,30 @@ def get_hierarchical_pos(net):
     return pos
 
 def get_block_matrix(membership, intra_community_p, inter_community_p):
+    """Generate binary block-structured matrix with with different
+    probabilities of 1 entries for intra- and inter-community entries.
+
+    For example:
+
+    >>> from graphy import graphgen
+    >>> cmx = graphgen.get_block_matrix([0,0,0,0,0,1,1,1,1,1], 0.5, 0.1)
+    ...
+
+    Parameters
+    ----------
+    membership : list or np.array of ints
+        Array containing assignment of each node to communities
+    intra_community_p : float
+        Probability of having a 1 for intra-community connections
+    inter_community_p : float
+        Probability of having a 1 for inter-community connections
+
+    Returns
+    -------
+    np.array matrix
+
+    """
+
     membership = np.asarray(membership)
     N  = len(membership)
     mx = np.random.rand(N,N) > (1-inter_community_p)
@@ -85,6 +118,27 @@ def get_block_matrix(membership, intra_community_p, inter_community_p):
     return mx
 
 def get_barbell_matrix(membership, num_conns=1):
+    """Get a matrix corresponding to completely-connected communities
+    connected by paths.
+
+    For example:
+
+    >>> from graphy import graphgen
+    >>> cmx = graphgen.get_barbell_matrix([0,0,0,0,0,1,1,1,1,1])
+
+    Parameters
+    ----------
+    membership : list or np.array of ints
+        Array containing assignment of each node to communities
+    num_conns : int
+        Number of links that should run between communities 
+
+    Returns
+    -------
+    np.array matrix
+
+    """
+
     membership = np.asarray(membership)
     comms = list(set(membership))
     N  = len(membership)
