@@ -80,14 +80,14 @@ def get_hierarchical_pos(net):
 
     return pos
 
-def get_block_matrix(membership, intra_community_p, inter_community_p):
-    """Generate binary block-structured matrix with with different
-    probabilities of 1 entries for intra- and inter-community entries.
+def get_binary_block_matrix(membership, intra_community_p, inter_community_p):
+    """Generate binary block-structured matrix with different probabilities of 
+    1 entries for intra- and inter-community entries, and 0s on the diagonals.
 
     For example:
 
     >>> from graphy import graphgen
-    >>> cmx = graphgen.get_block_matrix([0,0,0,0,0,1,1,1,1,1], 0.5, 0.1)
+    >>> cmx = graphgen.get_binary_block_matrix([0,0,0,0,0,1,1,1,1,1], 0.5, 0.1)
 
     Parameters
     ----------
@@ -115,14 +115,46 @@ def get_block_matrix(membership, intra_community_p, inter_community_p):
     np.fill_diagonal(mx, 0)
     return mx
 
+def get_weighted_block_matrix(membership, intra_community_w, inter_community_w):
+    """Generate weighted block-structured matrix with different weights for 
+    intra- versus inter-community connections, and 0s on the diagonals.
+
+    For example:
+
+    >>> from graphy import graphgen
+    >>> cmx = graphgen.get_weighted_block_matrix([0,0,0,0,0,1,1,1,1,1], 0.5, 0.1)
+
+    Parameters
+    ----------
+    membership : list or np.array of ints
+        Array containing assignment of each node to communities
+    intra_community_w : float
+        Weight for intra-community connections
+    inter_community_w : float
+        Weight for inter-community connections
+
+    Returns
+    -------
+    np.array matrix
+
+    """
+
+    membership = np.asarray(membership)
+    N  = len(membership)
+    mx = np.random.zeros(shape=(N,N)) + inter_community_w
+    for comm in set(membership):
+        ixs = np.flatnonzero(membership == comm)
+        for r in ixs:
+            mx[r,ixs] = intra_community_w
+    np.fill_diagonal(mx, 0)
+    return mx
+
 def get_barbell_matrix(membership, num_conns=1):
     """Get a matrix corresponding to completely-connected communities
     connected by paths.
 
     For example:
 
-    ..plot::
-    
     >>> from graphy import graphgen
     >>> cmx = graphgen.get_barbell_matrix([0,0,0,0,0,1,1,1,1,1])
     >>> import matplotlib.pylab as plt
