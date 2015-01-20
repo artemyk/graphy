@@ -19,6 +19,7 @@ def hierarchical(n, level):
     Returns
     -------
     networkx graph
+        The hierchically-structured network
 
     """
 
@@ -50,9 +51,14 @@ def get_hierarchical_pos(net):
 
     For example:
 
-    >>> from graphy import graphgen
-    >>> G = graphgen.hierarchical(3, 2)
-    >>> pos = graphgen.get_hierarchical_pos(G)
+    .. plot::
+        :include-source:
+
+        >>> from graphy import graphgen
+        >>> G = graphgen.hierarchical(3, 2)
+        >>> pos = graphgen.get_hierarchical_pos(G)
+        >>> import networkx as nx
+        >>> nx.draw_networkx(G, with_labels=False, node_size=50, pos=pos)
 
     Parameters
     ----------
@@ -86,8 +92,12 @@ def get_binary_block_matrix(membership, intra_community_p, inter_community_p):
 
     For example:
 
-    >>> from graphy import graphgen
-    >>> cmx = graphgen.get_binary_block_matrix([0,0,0,0,0,1,1,1,1,1], 0.5, 0.1)
+    .. plot::
+        :include-source:
+
+        >>> from graphy import graphgen
+        >>> cmx = graphgen.get_binary_block_matrix([0,0,0,0,0,1,1,1,1,1], 0.5, 0.1)
+        >>> plt.imshow(cmx, interpolation='none') # doctest: +SKIP
 
     Parameters
     ----------
@@ -101,7 +111,8 @@ def get_binary_block_matrix(membership, intra_community_p, inter_community_p):
     Returns
     -------
     np.array matrix
-
+        The connectivity matrix
+        
     """
 
     membership = np.asarray(membership)
@@ -121,8 +132,12 @@ def get_weighted_block_matrix(membership, intra_community_w, inter_community_w):
 
     For example:
 
-    >>> from graphy import graphgen
-    >>> cmx = graphgen.get_weighted_block_matrix([0,0,0,0,0,1,1,1,1,1], 0.5, 0.1)
+    .. plot::
+        :include-source:
+
+        >>> from graphy import graphgen
+        >>> cmx = graphgen.get_weighted_block_matrix([0,0,0,0,0,1,1,1,1,1], 0.5, 0.1)
+        >>> plt.imshow(cmx, interpolation='none') # doctest: +SKIP
 
     Parameters
     ----------
@@ -136,7 +151,8 @@ def get_weighted_block_matrix(membership, intra_community_w, inter_community_w):
     Returns
     -------
     np.array matrix
-
+        The connectivity matrix
+        
     """
 
     membership = np.asarray(membership)
@@ -153,8 +169,11 @@ def get_barbell_matrix(membership, num_conns=1):
     """Get a matrix corresponding to completely-connected communities
     connected by paths.
 
-    ..plot::
-        For example:
+    For example:
+
+    .. plot::
+        :include-source:
+
         >>> from graphy import graphgen
         >>> cmx = graphgen.get_barbell_matrix([0,0,0,0,0,1,1,1,1,1])
         >>> import matplotlib.pylab as plt
@@ -171,7 +190,8 @@ def get_barbell_matrix(membership, num_conns=1):
     Returns
     -------
     np.array matrix
-
+        The connectivity matrix
+        
     """
 
     membership = np.asarray(membership)

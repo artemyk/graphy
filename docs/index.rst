@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to graphy's documentation!
-=================================
+==================================
 
 .. toctree::
    :hidden:
@@ -17,7 +17,7 @@ graphy is a package for searching graph partitions. Check out the `GitHub reposi
 
 
 graphy module Index
-==================
+===================
 
 .. toctree::
    :maxdepth: 2
