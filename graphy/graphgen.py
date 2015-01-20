@@ -121,6 +121,7 @@ def get_barbell_matrix(membership, num_conns=1):
 
     For example:
 
+    ..plot::
     >>> from graphy import graphgen
     >>> cmx = graphgen.get_barbell_matrix([0,0,0,0,0,1,1,1,1,1])
     >>> import matplotlib.pylab as plt
