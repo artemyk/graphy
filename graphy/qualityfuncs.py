@@ -17,11 +17,24 @@ class QualityFunction(object):
 
 	def quality(self, membership):
 		"""Returns a quality score corresponding to membership vector. 
+
+		Parameters
+		----------
+		membership : np.array
+			Membership vector
+
+		Returns
+		-------
+		float
+			Quality
+
 		"""
 		raise NotImplementedError
 		
 class Modularity(QualityFunction):
 	def __init__(self, mx):
+		"""Class that implements Newman's modularity quality function.
+		"""
 		self.mx = mx.astype('float')
 		self.total_stubs = self.mx.sum()
 		self.ks = self.mx.sum(axis=1)

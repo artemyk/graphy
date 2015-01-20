@@ -8,9 +8,29 @@ import networkx as nx
 import matplotlib.pylab as plt
 
 def to_str(membership):
+    """Convert membership array to pretty string.
+
+    Example:
+
+    >>> from graphy import partitions
+    >>> print(partitions.to_str([0,0,0,1,1,1]))
+    [0 0 0 1 1 1]
+
+    Parameters
+    ----------
+    membership
+        Membership array to convert
+
+    Returns
+    -------
+    str
+        Pretty string
+
+    """
+
     return "[" + " ".join(map(str, membership)) + "]"
 
-def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0, cache=True):
+def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
     """Find optimal decomposition.
 
     Parameters
@@ -24,7 +44,14 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0, ca
         Initial membership assignment.  If None specified, each component is
         assigned to separate subsystem.
     debug_level : int, optional
-        Amount of debugging information to display
+        Amount of debugging information to display, from 0 (no debugging 
+        information) to 3 (maximal debugging information)
+
+    Returns
+    -------
+    np.array
+        Optimal membership array
+
     """
 
     class CommMerger(object):
@@ -178,6 +205,31 @@ def get_minsize_assignment(N, min_comm_size):
 
 
 def remap2match(partition1, partition2):
+    """Renumber membership assignments so that community identities have maximal 
+    overlap with another membership assignment.
+
+    For example:
+
+    >>> from graphy import partitions
+    >>> print(remap2match([3,3,1,1,0],[2,2,3,3,3]))
+    [2 2 3 3 4]
+
+    Parameters
+    ----------
+    partition1 : list or np.array
+        Membership assignment to remap
+    partition2 : list or np.array
+        Membership assignment to match
+
+    Returns
+    -------
+    np.array
+        Remapped assignment
+
+    """
+    partition1 = np.asarray(partition1)
+    partition2 = np.asarray(partition2)
+
     nmap = {}
     to_remap = set(partition1)
     gtlist = partition2.tolist() if isinstance(partition2, np.ndarray) else partition2
