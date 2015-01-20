@@ -6,17 +6,17 @@ import networkx as nx
 import numpy as np
 
 def hierarchical(n, level):
-	""" Generates hiearchical graph using method proposed of:
-	Ravasz E, Barabasi AL, Hierarchical organization in complex networks, PRE, 2003.
+    """ Generates hiearchical graph using method proposed of:
+    Ravasz E, Barabasi AL, Hierarchical organization in complex networks, PRE, 2003.
 
-	Parameters
-	----------
-	n : int
-		Number of nodes
-	level : int
-		Number of hierarchical levels to create
+    Parameters
+    ----------
+    n : int
+        Number of nodes
+    level : int
+        Number of hierarchical levels to create
 
-	"""
+    """
 
     if level == 0:
         return nx.complete_graph(n)
@@ -42,20 +42,21 @@ def hierarchical(n, level):
         return fullG
 
 def get_hierarchical_pos(net):
-	""" Get x,y positions for plotting hierarchical graph.
+    """ Get x,y positions for plotting hierarchical graph.
 
-	For example:
+    For example:
 
-	>>> G = graphgen.hierarchical(3, 2)
-	>>> pos = graphgen.get_hierarchical_pos(G)
-	...
+    >>> from graphy import graphgen
+    >>> G = graphgen.hierarchical(3, 2)
+    >>> pos = graphgen.get_hierarchical_pos(G)
+    ...
 
-	Parameters
-	----------
-	net : networkx graph
-		Graph whose nodes to layout
+    Parameters
+    ----------
+    net : networkx graph
+        Graph whose nodes to layout
 
-	"""
+    """
 
     pos = {}
 
