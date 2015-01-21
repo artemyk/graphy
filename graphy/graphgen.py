@@ -1,6 +1,9 @@
 """Module implementing tools to generate graphs and connectivity matrices.
-Generally, `gen_...` functions return generatively-created objects, while
-`get_...` return graphs corresponding to passed in membership vectors. 
+Generally, ``gen_...`` functions return generatively-created objects, while
+``get_...`` return graphs corresponding to passed in membership vectors. 
+
+Use ``sample_connection_matrix`` to generate binary connectivity matrices
+sampled from matrices of connection probabilities.
 
 """
 
