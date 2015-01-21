@@ -159,6 +159,17 @@ def get_weighted_block_matrix(membership, intra_community_w, inter_community_w):
 def gen_hierarchical_weighted_block_matrix(blocksize, numblocks, numlevels, level_weights):
     """Generate hierarchical weighted block matrix. 
 
+
+    For example:
+
+    .. plot::
+        :include-source:
+
+        >>> from graphy import graphgen
+        >>> cmx = graphgen.gen_hierarchical_weighted_block_matrix(4, 4, 2, [0.3, 0.2, 0.1])
+        >>> plt.imshow(cmx, interpolation='none') # doctest: +SKIP
+
+
     Parameters
     ----------
     blocksize : int
@@ -175,16 +186,6 @@ def gen_hierarchical_weighted_block_matrix(blocksize, numblocks, numlevels, leve
     -------
     np.array matrix
         The generated connectivity matrix
-
-
-    For example:
-
-    .. plot::
-        :include-source:
-
-        >>> from graphy import graphgen
-        >>> cmx = graphgen.gen_hierarchical_weighted_block_matrix(4, 4, 2, [0.3, 0.2, 0.1])
-        >>> plt.imshow(cmx, interpolation='none') # doctest: +SKIP
 
     """
 
