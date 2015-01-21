@@ -49,7 +49,6 @@ extensions = [
 
 # 'sphinx.ext.autosummary',
 numpydoc_show_class_members = False
-autodoc_member_order = 'bysource'
 
 extensions += [
           #'matplotlib.sphinxext.mathmpl',
@@ -311,3 +310,6 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'http://docs.python.org/': None}
+
+autodoc_member_order = 'bysource'
+
