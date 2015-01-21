@@ -13,8 +13,9 @@ def test_partition_search():
 	#mx = np.array(nx.to_numpy_matrix(nx.karate_club_graph()),dtype='float')
 	
 	ground_truth = np.asarray([0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1])
-	mx = graphy.graphgen.get_binary_block_matrix(ground_truth,0.7,0.1)
-
+	mxp = graphy.graphgen.get_weighted_block_matrix(ground_truth,0.7,0.1)
+	mx = graphy.graphgen.sample_connection_matrix(mxp)
+	
 	qualityObj = graphy.qualityfuncs.Modularity(mx)
 
 	found_membership = graphy.partitions.find_optimal(mx.shape[0], qualityObj)

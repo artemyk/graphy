@@ -94,8 +94,24 @@ def get_hierarchical_net_pos(net):
 
     return pos
 
+
 def sample_connection_matrix(prob_mx):
-    mx = np.random.rand(*prob_mx.shape) > (1-prob_mx)
+    """Sample from a matrix of connection probabilities in order to create a 
+    binary connection matrix with 0s on the diagonal.
+
+    Parameters
+    ----------
+    prob_mx : 2-dimensional np.array of floats
+        Matrix of connection probabilities
+
+    Returns
+    -------
+    2-dimensional np.array
+        Binary connectivity matrix
+
+    """
+
+    mx = (np.random.rand(*prob_mx.shape) > (1-prob_mx)).astype('int')
     np.fill_diagonal(mx, 0)
     return mx
 
@@ -167,7 +183,7 @@ def gen_hierarchical_weighted_block_matrix(blocksize, numblocks, numlevels, leve
         :include-source:
 
         >>> from graphy import graphgen
-        >>> cmx = graphy.graphgen.gen_hierarchical_weighted_block_matrix(4, 4, 2, [0.3, 0.2, 0.1])
+        >>> cmx = graphgen.gen_hierarchical_weighted_block_matrix(4, 4, 2, [0.3, 0.2, 0.1])
         >>> plt.imshow(cmx, interpolation='none') # doctest: +SKIP
 
     """
