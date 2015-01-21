@@ -1,3 +1,7 @@
+"""Module implementing tools to work with partitions of sets as well as 
+perform heuristic optimization over set partitions.
+"""
+
 from __future__ import division, print_function, absolute_import
 import six
 range = six.moves.range

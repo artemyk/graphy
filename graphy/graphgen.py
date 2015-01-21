@@ -1,12 +1,20 @@
+"""Module implementing tools to generate graphs and connectivity matrices.
+Generally, `gen_...` functions return generatively-created objects, while
+`get_...` return graphs corresponding to passed in membership vectors. 
+
+"""
+
+
 from __future__ import division, print_function, absolute_import
 import six
 range = six.moves.range
 
 import networkx as nx
 import numpy as np
+import itertools
 
-def get_hierarchical_net(n, level):
-    """Generates hiearchical graph using method proposed of:
+def gen_hierarchical_net(n, level):
+    """Generate hiearchical graph using method proposed of:
     Ravasz E, Barabasi AL, Hierarchical organization in complex networks, PRE, 2003.
 
     Parameters
@@ -30,7 +38,7 @@ def get_hierarchical_net(n, level):
 
         #get lower-order graphs
         for i in range(n):
-            fullG = nx.union(get_hierarchical_net(n, level-1), fullG, rename=(str(i)+'.',''))
+            fullG = nx.union(gen_hierarchical_net(n, level-1), fullG, rename=(str(i)+'.',''))
         
         edges = []
         suffix = ''
@@ -55,7 +63,7 @@ def get_hierarchical_net_pos(net):
         :include-source:
 
         >>> from graphy import graphgen
-        >>> G = graphgen.get_hierarchical_net(5, 2)
+        >>> G = graphgen.gen_hierarchical_net(5, 2)
         >>> pos = graphgen.get_hierarchical_net_pos(G)
         >>> import networkx as nx
         >>> nx.draw_networkx(G, with_labels=False, node_size=50, pos=pos)
@@ -86,49 +94,16 @@ def get_hierarchical_net_pos(net):
 
     return pos
 
-def get_binary_block_matrix(membership, intra_community_p, inter_community_p):
-    """Generate binary block-structured matrix with different probabilities of 
-    1 entries for intra- and inter-community entries, and 0s on the diagonals.
-
-    For example:
-
-    .. plot::
-        :include-source:
-
-        >>> from graphy import graphgen
-        >>> cmx = graphgen.get_binary_block_matrix([0,0,0,0,0,1,1,1,1,1], 0.5, 0.1)
-        >>> plt.imshow(cmx, interpolation='none') # doctest: +SKIP
-
-    Parameters
-    ----------
-    membership : list or np.array of ints
-        Array containing assignment of each node to communities
-    intra_community_p : float
-        Probability of having a 1 for intra-community connections
-    inter_community_p : float
-        Probability of having a 1 for inter-community connections
-
-    Returns
-    -------
-    np.array matrix
-        The connectivity matrix
-
-    """
-
-    membership = np.asarray(membership)
-    N  = len(membership)
-    mx = np.random.rand(N,N) > (1-inter_community_p)
-    for comm in set(membership):
-        ixs = np.flatnonzero(membership == comm)
-        comm_size = len(ixs)
-        for r in ixs:
-            mx[r,ixs] = np.random.rand(comm_size) > (1-intra_community_p)
+def sample_connection_matrix(prob_mx):
+    mx = np.random.rand(*prob_mx.shape) > (1-prob_mx)
     np.fill_diagonal(mx, 0)
     return mx
 
+
 def get_weighted_block_matrix(membership, intra_community_w, inter_community_w):
-    """Generate weighted block-structured matrix with different weights for 
-    intra- versus inter-community connections, and 0s on the diagonals.
+    """Get weighted block-structured matrix corresponding to membership vector
+    with different weights for intra- versus inter-community connections, and 
+    0s on the diagonals.
 
     For example:
 
@@ -165,9 +140,61 @@ def get_weighted_block_matrix(membership, intra_community_w, inter_community_w):
     np.fill_diagonal(mx, 0)
     return mx
 
+def gen_hierarchical_weighted_block_matrix(blocksize, numblocks, numlevels, level_weights):
+    """Generate hierarchical weighted block matrix. 
+
+    Parameters
+    ----------
+    blocksize : int
+        Number of nodes to include in each lowest-level block
+    numblocks : int
+        Number of blocks each level consists of
+    numlevels : int
+        Number of levels
+    level_weights : list of float
+        Strength of connection between members for each level (plus one more for 
+        the 'top' level). Order is from lowest-level (smallest blocks) to highest-level
+
+    Returns
+    -------
+    np.array matrix
+        The generated connectivity matrix
+
+
+    For example:
+
+    .. plot::
+        :include-source:
+
+        >>> from graphy import graphgen
+        >>> cmx = graphy.graphgen.gen_hierarchical_weighted_block_matrix(4, 4, 2, [0.3, 0.2, 0.1])
+        >>> plt.imshow(cmx, interpolation='none') # doctest: +SKIP
+
+    """
+
+    def get_match_level(i,j):
+        K = len(i)
+        for ndx, (ival, jval) in enumerate(zip(i,j)):
+            if ival != jval:
+                return K-ndx
+        return 0
+
+    N = blocksize * (numblocks ** numlevels)
+    mx = np.zeros( (N,N) )
+    blockcoords = list(itertools.product(*[list(range(numblocks)) for i in range(numlevels)]))
+
+    for indx, i in enumerate(blockcoords):
+        for jndx, j in enumerate(blockcoords):
+            w = level_weights[get_match_level(i,j)]
+            mx[indx*blocksize:(indx+1)*blocksize,jndx*blocksize:(jndx+1)*blocksize] = w
+
+    np.fill_diagonal(mx, 0)
+    return mx
+
+
 def get_barbell_matrix(membership, num_conns=1):
-    """Get a matrix corresponding to completely-connected communities
-    connected by paths.
+    """Get a matrix of completely-connected communities
+    connected by paths corresponding to membership vector.
 
     For example:
 
