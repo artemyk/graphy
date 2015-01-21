@@ -5,8 +5,8 @@ range = six.moves.range
 import networkx as nx
 import numpy as np
 
-def hierarchical(n, level):
-    """ Generates hiearchical graph using method proposed of:
+def get_hierarchical_net(n, level):
+    """Generates hiearchical graph using method proposed of:
     Ravasz E, Barabasi AL, Hierarchical organization in complex networks, PRE, 2003.
 
     Parameters
@@ -30,7 +30,7 @@ def hierarchical(n, level):
 
         #get lower-order graphs
         for i in range(n):
-            fullG = nx.union(hierarchical(n, level-1), fullG, rename=(str(i)+'.',''))
+            fullG = nx.union(get_hierarchical_net(n, level-1), fullG, rename=(str(i)+'.',''))
         
         edges = []
         suffix = ''
@@ -46,7 +46,7 @@ def hierarchical(n, level):
         fullG.add_edges_from(edges)
         return fullG
 
-def get_hierarchical_pos(net):
+def get_hierarchical_net_pos(net):
     """ Get x,y positions for plotting hierarchical graph.
 
     For example:
@@ -55,8 +55,8 @@ def get_hierarchical_pos(net):
         :include-source:
 
         >>> from graphy import graphgen
-        >>> G = graphgen.hierarchical(3, 2)
-        >>> pos = graphgen.get_hierarchical_pos(G)
+        >>> G = graphgen.get_hierarchical_net(5, 2)
+        >>> pos = graphgen.get_hierarchical_net_pos(G)
         >>> import networkx as nx
         >>> nx.draw_networkx(G, with_labels=False, node_size=50, pos=pos)
 
@@ -112,7 +112,7 @@ def get_binary_block_matrix(membership, intra_community_p, inter_community_p):
     -------
     np.array matrix
         The connectivity matrix
-        
+
     """
 
     membership = np.asarray(membership)
