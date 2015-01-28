@@ -34,7 +34,7 @@ def to_str(membership):
 
     return "[" + " ".join(map(str, membership)) + "]"
 
-def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
+def find_optimal(N, quality_func_obj, initial_membership=None, num_runs=1, debug_level=0):
     """Find optimal decomposition.
 
     Parameters
@@ -47,6 +47,9 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
     initial_membership : np.array, optional
         Initial membership assignment.  If None specified, each component is
         assigned to separate subsystem.
+    num_runs : int, optional
+        Number of runs to try, can improve quality of decompositions. Default
+        is 1.
     debug_level : int, optional
         Amount of debugging information to display, from 0 (no debugging 
         information) to 3 (maximal debugging information)
@@ -178,7 +181,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, debug_level=0):
     else:
         membership = initial_membership.copy()
 
-    for i in range(2):
+    for i in range(num_runs):
         if debug_level >= 1:
             print("*** Run through %d ***" % i)
 
