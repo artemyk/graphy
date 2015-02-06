@@ -1,10 +1,10 @@
 graphy package
 =============
 
-Submodules
-----------
+Modules
+-------
 
-:doc:`graphy.partitions` - Submodule for searching over partitions
-:doc:`graphy.graphgen` - Graph generation submodule
-:doc:`graphy.qualityfuncs` - Quality functions submodule
-:doc:`graphy.plotting' - Plotting functions submodule
+:doc:`graphy.partitions` - Module for searching over partitions
+:doc:`graphy.graphgen` - Graph generation module
+:doc:`graphy.qualityfuncs` - Quality functions module
+:doc:`graphy.plotting` - Plotting functions module
