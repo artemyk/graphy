@@ -18,7 +18,7 @@ def plot_membership(N, membership, pos=None, ax=None, colormap_name='Paired'):
 
       >>> from graphy import plotting
       >>> import numpy as np
-      >>> plotting.plot_membership(10, np.arange(10))
+      >>> plotting.plot_membership(10, np.arange(12)/3)
       ...
 
 
@@ -31,7 +31,7 @@ def plot_membership(N, membership, pos=None, ax=None, colormap_name='Paired'):
   pos : list of tuples
       List of (x,y) positions of nodes.  If not specified, nodes
       are arranged along a circle.
-  ax : matplotlib axis object (default is gca
+  ax : matplotlib axis object (default is current axis)
       Matplotlib axis to plot onto.
   colormap_name : string (default 'Paired')
       Name of colormap to use to visualize community assignments.
