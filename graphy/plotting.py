@@ -18,7 +18,7 @@ def plot_membership(N, membership, pos=None, ax=None, colormap_name='Paired'):
 
       >>> from graphy import plotting
       >>> import numpy as np
-      >>> plotting.plot_membership(10, np.arange(12)/3)
+      >>> plotting.plot_membership(12, np.arange(12)/3)
       ...
 
 
