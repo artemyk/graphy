@@ -26,7 +26,7 @@ def plot_membership(N, membership, pos=None, ax=None, colormap_name='Paired'):
   ----------
   N : int
       Number of nodes.
-  membership : list
+  membership : list of int
       Community membership vector.
   pos : list of tuples
       List of (x,y) positions of nodes.  If not specified, nodes
@@ -48,7 +48,7 @@ def plot_membership(N, membership, pos=None, ax=None, colormap_name='Paired'):
     def get_rgb(self, val):
       return self.scalarMap.to_rgba(val)
 
-  membership = np.asarray(membership)
+  membership = np.asarray(membership).astype('int')
 
   if pos is None:
       pos = np.asarray([[np.cos(angle), np.sin(angle)] 
