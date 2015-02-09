@@ -8,3 +8,4 @@ Modules
 :doc:`graphy.graphgen` - Graph generation module
 :doc:`graphy.qualityfuncs` - Quality functions module
 :doc:`graphy.plotting` - Plotting functions module
+:doc:`graphy.utils` - Utility functions module

@@ -8,7 +8,20 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-def plot_membership(N, membership, pos=None, ax=None, colormap_name='Paired'):
+
+class MplColorHelper:
+  def __init__(self, cmap_name, start_val, stop_val):
+    self.cmap_name = cmap_name
+    self.cmap = plt.get_cmap(cmap_name)
+    self.norm = mpl.colors.Normalize(vmin=start_val, vmax=stop_val)
+    self.scalarMap = cm.ScalarMappable(norm=self.norm, cmap=self.cmap)
+
+  def get_rgb(self, val):
+    return self.scalarMap.to_rgba(val)
+
+
+def plot_membership(membership, pos=None, ax=None, colormap_name='Paired',
+  node_size=200, labels=None, font_size=10):
   """Plot a circle visualizing community membership of nodes. 
 
   For example:
@@ -18,14 +31,12 @@ def plot_membership(N, membership, pos=None, ax=None, colormap_name='Paired'):
 
       >>> from graphy import plotting
       >>> import numpy as np
-      >>> plotting.plot_membership(12, np.arange(12)/3)
+      >>> plotting.plot_membership(np.arange(12)/3)
       ...
 
 
   Parameters
   ----------
-  N : int
-      Number of nodes.
   membership : list of int
       Community membership vector.
   pos : list of tuples
@@ -35,20 +46,17 @@ def plot_membership(N, membership, pos=None, ax=None, colormap_name='Paired'):
       Matplotlib axis to plot onto.
   colormap_name : string (default 'Paired')
       Name of colormap to use to visualize community assignments.
+  node_size : int (default 200)
+      Size of nodes to draw.
+  labels : list of str (default None)
+      Node labels, if desired.
+  font_size : int (default 10)
+      Font size with which to plot the labels, if provided.
 
   """
 
-  class MplColorHelper:
-    def __init__(self, cmap_name, start_val, stop_val):
-      self.cmap_name = cmap_name
-      self.cmap = plt.get_cmap(cmap_name)
-      self.norm = mpl.colors.Normalize(vmin=start_val, vmax=stop_val)
-      self.scalarMap = cm.ScalarMappable(norm=self.norm, cmap=self.cmap)
-
-    def get_rgb(self, val):
-      return self.scalarMap.to_rgba(val)
-
   membership = np.asarray(membership).astype('int')
+  N = len(membership)
 
   if pos is None:
       pos = np.asarray([[np.cos(angle), np.sin(angle)] 
@@ -71,9 +79,12 @@ def plot_membership(N, membership, pos=None, ax=None, colormap_name='Paired'):
   
   nx.draw(g, 
           pos=pos, 
-          font_size=10,
           width=2,
-          node_size=200,
+          node_size=node_size,
           with_labels=False, 
           node_color=COL.get_rgb(membership_colors), 
           ax=ax)
+  
+  if labels is not None:
+    nx.draw_networkx_labels(g, pos, dict(zip(range(N), labels)), 
+      font_size=font_size, ax=ax)

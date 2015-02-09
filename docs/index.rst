@@ -26,6 +26,7 @@ graphy module Index
    graphy.graphgen
    graphy.plotting
    graphy.qualityfuncs
+   graphy.utils
 
 
 
