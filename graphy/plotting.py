@@ -74,8 +74,8 @@ def plot_membership(membership, pos=None, ax=None, colormap_name='Paired',
 
   membership_colors = []
   for m in membership:
-    new_col = np.sum([v*2**-(p+1) 
-                      for p, v in enumerate(np.array(map(int, bin(m)[2:]))[::-1])])
+    bin_repr = np.array(list(map(int, bin(m)[2:])))
+    new_col = np.sum([v*2**-(p+1) for p, v in enumerate(bin_repr[::-1])])
     membership_colors.append(int(N*new_col))
   
   nx.draw(g, 
