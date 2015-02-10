@@ -189,7 +189,7 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
 
   for cp, mp in zip(cplist, mean_cp[1::]):
     coord3 = transFigure.transform(ax1.transData.transform([cp, 1.0]))
-    coord4 = transFigure.transform(ax2.transData.transform([cp, 0.0]))
+    coord4 = transFigure.transform(ax2.transData.transform([cp, ax2.get_ylim()[0]]))
     fig.lines.append(mpl.lines.Line2D((coord3[0],coord4[0]),(coord3[1],coord4[1]),color=black_color,
                                transform=fig.transFigure, lw=changepoint_linewidth))
 
