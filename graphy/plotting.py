@@ -132,9 +132,9 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
   if time is None:
       time = range(len(mod_ts))
   
-  fig, (ax1, ax2) = plt.subplots(2, sharex=True, sharey=False, figsize = (6,6))
+  fig, (ax1, ax2) = plt.subplots(2, sharex=True, sharey=False, figsize=(6,6))
   #plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.1, hspace=0.1)
-  fig.subplots_adjust(top = 0.75, hspace=0.0, right = 0.95, left = 0.15)
+  fig.subplots_adjust(top=0.75, hspace=0.0, right=0.95, left=0.15)
   
   # play with the axis
   spine_list = ['top', 'right', 'left', 'bottom']
@@ -168,6 +168,7 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
   color_idx = np.linspace(0, 1, data_ts.shape[1])
   for i, y in zip(color_idx, data_ts.T):
     plt.plot(time, y, color=plt.cm.Paired(i), lw=state_linewidth)
+  plt.xlim([time.min(), time.max()])
 
   # plot the background modularity timeseries
   ax1.plot(time, mod_ts , color = blue_color, ls = '--', lw = 1)
