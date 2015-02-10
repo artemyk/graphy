@@ -214,7 +214,11 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
 
 def DrawDiGraph(graph, pos = None, membership = None, nodelabels = None, edgescale = 1.0, nodesize = 0.05, selfLoopOffset = (0.05,0.05),
                 selfloopsize = 0.1, net_node_size = 500,
-                edgeweight = 'weight', arrow_sep = 0.0002, arrowheadlength = 0.03, arrowheadwidth = 0.03):
+                edgeweight = 'weight', arrow_sep = 0.0002, arrowheadlength = 0.03, arrowheadwidth = 0.03,
+                font_size=14, cmap='Paired', ax=None):
+
+    if ax is None:
+      ax = plt.gca()
 
     red_color = '#e41a1c'
     black_color = '#262626'
@@ -273,10 +277,6 @@ def DrawDiGraph(graph, pos = None, membership = None, nodelabels = None, edgesca
         indx = np.unravel_index(dist.argmin(), dist.shape)
         return ellipsepoints[indx[0]]
 
-
-    fig, ax = plt.subplots(ncols = 1, nrows = 1, figsize=(6,6))
-    fig.subplots_adjust(hspace = 0.1, wspace = 0.1)
-    
     localaxis = axis_set(ax)
     
     try:
@@ -297,8 +297,8 @@ def DrawDiGraph(graph, pos = None, membership = None, nodelabels = None, edgesca
             selfedge = Ellipse(xy = (n1x + selfLoopOffset[0], n1y + selfLoopOffset[1]) , width = selfloopsize, height = selfloopsize, 
                                angle = 0, linewidth = edge_weights[edge] * edgescale, fill = False, ec = black_color, alpha = 1)
             localaxis.add_artist(selfedge)
-            localaxis.arrow(n1x+selfLoopOffset[0]+arrowheadlength/2 , n1y+1, -0.1*selfloopsize  , 0 , head_length = arrowheadlength, \
-                            head_width = arrowheadwidth, fc= black_color, ec=black_color, lw = edge_weights[edge] * edgescale)
+            #localaxis.arrow(n1x+selfLoopOffset[0]+arrowheadlength/2 , n1y+1, -0.1*selfloopsize  , 0 , head_length = arrowheadlength, \
+            #                head_width = arrowheadwidth, fc= black_color, ec=black_color, lw = edge_weights[edge] * edgescale)
     
         if edge[0] != edge[1]:
             if graph.has_edge(edge[1], edge[0]):
@@ -326,7 +326,7 @@ def DrawDiGraph(graph, pos = None, membership = None, nodelabels = None, edgesca
     if membership is None:
       bnodes = nx.draw_networkx_nodes(graph,pos, node_size = net_node_size, node_color=red_color, with_labels=False)
     else:
-      bnodes = nx.draw_networkx_nodes(graph,pos,cmap=plt.get_cmap('Paired'), node_size = net_node_size, node_color=membership, with_labels=False)
+      bnodes = nx.draw_networkx_nodes(graph,pos,cmap=plt.get_cmap(cmap), node_size = net_node_size, node_color=membership, with_labels=False)
     
     if not nodelabels is None:
-      nx.draw_networkx_labels(graph,pos,nodelabels,font_size=14)
+      nx.draw_networkx_labels(graph,pos,nodelabels,font_size=font_size)
