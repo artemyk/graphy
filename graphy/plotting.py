@@ -93,106 +93,123 @@ def plot_membership(membership, pos=None, ax=None, colormap_name='Paired',
       font_size=font_size, ax=ax)
 
 
-def DrawModularityFigure(mod_ts, optmod_ts = None, data_ts = None, time = None, change_points = None, node_size = 100,
-                        y1label = 'Perturbation \n Modularity', y2label = 'Change in Phase', x1label= 'Time', filename = None):
-    """Make the Perturbation Modularity plots. 
+def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None, 
+                         change_points=None, vis_change_points=None,
+                         node_size=100,
+                         y1label='Perturbation \n Modularity', 
+                         y2label='Change in Phase', x1label='Time',
+                         state_linewidth=2,
+                         changepoint_linewidth=2,
+                         ):
+  """Make the Perturbation Modularity plots. 
 
   Parameters
   ----------
-  mod_ts : array
+  mod_ts : array, num_time x num_partitions
       Modularity over time for partitions of interest (blue dashed).
-      num_time x num_partitions
-  optmod_ts : array
+  optmod_ts : array, num_time x 1
       Modularity over time for optimal partiton (red solid).
-      num_time x 1
-  data_ts : array
+  data_ts : array, num_time x SystemSize
       Data timeseries for second plot (phase or change in phase, ect...)
-      num_time x SystemSize
   time : array
       Time points for plots
-  change_points : dict
+  change_points : dict ({ time : membership_vector })
       Dictionary of partitions keyed by the first time they become optimal
+  vis_change_points : list of time (default None)
+      Which change_points to visualize using network plots.  By default, all
+      change points will be visualized.
   node_size : int (default 100)
       node size for partition graphs
-  filename : str (default None)
-     If not None, saves the figure with this filename.
+  state_linewidth : int (default 2)
+      Linewidth to use for the state plots.
+  changepoint_linewidth : int (default 2)
+      Linewidth to use for the changepoint lines.
 
   """
     
-    black_color = '#262626'
-    blue_color = '#779ECB'
-    red_color = '#C23B22'
-    
-    if time is None:
-        time = range(len(mod_ts))
-    
-    fig, (ax1, ax2) = plt.subplots(2, sharex=True, sharey=False, figsize = (6,6))
-    #plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.1, hspace=0.1)
-    fig.subplots_adjust(top = 0.75, hspace=0.0, right = 0.95, left = 0.15)
-    
-    # play with the axis
-    spine_list = ['top', 'right', 'left', 'bottom']
-    for spine in spine_list:
-        ax1.spines[spine].set_color(black_color)
-        ax2.spines[spine].set_color(black_color)
+  black_color = '#262626'
+  blue_color = '#779ECB'
+  red_color = '#C23B22'
+  
+  if time is None:
+      time = range(len(mod_ts))
+  
+  fig, (ax1, ax2) = plt.subplots(2, sharex=True, sharey=False, figsize = (6,6))
+  #plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.1, hspace=0.1)
+  fig.subplots_adjust(top = 0.75, hspace=0.0, right = 0.95, left = 0.15)
+  
+  # play with the axis
+  spine_list = ['top', 'right', 'left', 'bottom']
+  for spine in spine_list:
+      ax1.spines[spine].set_color(black_color)
+      ax2.spines[spine].set_color(black_color)
 
-    ax1.xaxis.label.set_color(black_color)
-    ax1.yaxis.label.set_color(black_color)
+  ax1.xaxis.label.set_color(black_color)
+  ax1.yaxis.label.set_color(black_color)
 
-    ax2.xaxis.label.set_color(black_color)
-    ax2.yaxis.label.set_color(black_color)
+  ax2.xaxis.label.set_color(black_color)
+  ax2.yaxis.label.set_color(black_color)
 
-    for xlabel in ax2.axes.get_xticklabels():
-        xlabel.set_fontsize(12)
+  for xlabel in ax2.axes.get_xticklabels():
+      xlabel.set_fontsize(12)
 
-    for ylabel in ax1.axes.get_yticklabels():
-        ylabel.set_fontsize(12)
+  for ylabel in ax1.axes.get_yticklabels():
+      ylabel.set_fontsize(12)
 
-    for ylabel in ax2.axes.get_yticklabels():
-        ylabel.set_fontsize(12)
-    
-    #make last y2 label hidden
-    ax2.yaxis.set_major_locator(MaxNLocator(nbins=len(ax2.get_yticklabels()), prune='upper')) # added 
-    
-    ax1.set_ylabel(y1label, fontsize=14)
-    ax2.set_xlabel(x1label, fontsize=14)
-    ax2.set_ylabel(y2label, fontsize=14)
-    
-    # plot the data timeseries in the bottom axis
-    ax2.plot(time, data_ts, lw = 2)
-    
-    # plot the background modularity timeseries
-    ax1.plot(time, mod_ts , color = blue_color, ls = '--', lw = 1)
+  for ylabel in ax2.axes.get_yticklabels():
+      ylabel.set_fontsize(12)
+  
+  #make last y2 label hidden
+  ax2.yaxis.set_major_locator(MaxNLocator(nbins=len(ax2.get_yticklabels()), prune='upper')) # added 
+  
+  ax1.set_ylabel(y1label, fontsize=14)
+  ax2.set_xlabel(x1label, fontsize=14)
+  ax2.set_ylabel(y2label, fontsize=14)
+  
+  # plot the data timeseries in the bottom axis
+  color_idx = np.linspace(0, 1, data_ts.shape[1])
+  for i, y in zip(color_idx, data_ts.T):
+    plt.plot(time, y, color=plt.cm.Paired(i), lw=state_linewidth)
 
-    transFigure = fig.transFigure.inverted()
-    
-    num_change_points = float(len(change_points))
-    cplist = sorted(change_points.keys())
-    # get the mean position for a partition interval
-    mean_cp = np.convolve(cplist + [time[-1]], 0.5*np.ones(2), 'same')
-   
-    for cp, mp in zip(cplist, mean_cp[1::]):
-        # this is an inset axes over the main axes
-        a = plt.axes([0.1 + 0.85 * cplist.index(cp) / num_change_points, .8, 1.0/num_change_points, 1.0/num_change_points])
-        plot_membership(change_points[cp], ax = a, colormap_name='Paired', node_size=node_size)
-        a.text(0.0, 0.0, str(len(set(change_points[cp]))), fontsize = 20, ha='center', va='center', color = black_color)
-        plt.setp(a, xticks=[], yticks=[])
+  # plot the background modularity timeseries
+  ax1.plot(time, mod_ts , color = blue_color, ls = '--', lw = 1)
 
-        coord1 = transFigure.transform(a.transData.transform([0, -1.3]))
-        coord2 = transFigure.transform(ax1.transData.transform([mp, 1.0]))
-        
-        coord3 = transFigure.transform(ax1.transData.transform([cp, 1.0]))
-        coord4 = transFigure.transform(ax2.transData.transform([cp, 0.0]))
-    
-        fig.lines.append(mpl.lines.Line2D((coord1[0],coord2[0]),(coord1[1],coord2[1]),color = black_color,
-                                   transform=fig.transFigure, lw = 2))
-        fig.lines.append(mpl.lines.Line2D((coord3[0],coord4[0]),(coord3[1],coord4[1]),color = black_color,
-                                   transform=fig.transFigure, lw = 2))
+  transFigure = fig.transFigure.inverted()
+  
+  cplist = sorted(change_points.keys())
+  # get the mean position for a partition interval
+  mean_cp = np.convolve(cplist + [time[-1]], 0.5*np.ones(2), 'same')
+ 
+  if vis_change_points is None:
+    vis_change_points = change_points.keys()
 
-    ax1.plot(time, optmod_ts, color = red_color, lw = 3)
+  vis_change_points = sorted(vis_change_points)
+  num_vis_change_points = float(len(vis_change_points))
+
+  for cp, mp in zip(cplist, mean_cp[1::]):
+    coord3 = transFigure.transform(ax1.transData.transform([cp, 1.0]))
+    coord4 = transFigure.transform(ax2.transData.transform([cp, 0.0]))
+    fig.lines.append(mpl.lines.Line2D((coord3[0],coord4[0]),(coord3[1],coord4[1]),color=black_color,
+                               transform=fig.transFigure, lw=changepoint_linewidth))
+
+  for cp, mp in zip(cplist, mean_cp[1::]):
+    if cp not in vis_change_points:
+      continue
+
+    # this is an inset axes over the main axes
+    a = plt.axes([0.1 + 0.85 * vis_change_points.index(cp) / num_vis_change_points, .8, 1.0/num_vis_change_points, 1.0/num_vis_change_points])
+    plot_membership(change_points[cp], ax = a, colormap_name='Paired', node_size=node_size)
+    a.text(0.0, 0.0, str(len(set(change_points[cp]))), fontsize = 20, ha='center', va='center', color = black_color)
+    plt.setp(a, xticks=[], yticks=[])
+
+    coord1 = transFigure.transform(a.transData.transform([0, -1.3]))
+    coord2 = transFigure.transform(ax1.transData.transform([mp, 1.0]))
     
-    if not filename is None:
-        plt.savefig(filename)
+    fig.lines.append(mpl.lines.Line2D((coord1[0],coord2[0]),(coord1[1],coord2[1]),color=black_color,
+                               transform=fig.transFigure, lw=2))
+
+  ax1.plot(time, optmod_ts, color = red_color, lw = 3)
+
 
 def DrawDiGraph(graph, pos = None, membership = None, nodelabels = None, edgescale = 1.0, nodesize = 0.05, selfLoopOffset = (0.05,0.05),
                 selfloopsize = 0.1, net_node_size = 500,
