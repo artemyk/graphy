@@ -8,6 +8,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from matplotlib import cm
+from matplotlib.patches import Ellipse
+from scipy.spatial.distance import cdist
 
 
 class MplColorHelper:
@@ -192,3 +194,121 @@ def DrawModularityFigure(mod_ts, optmod_ts = None, data_ts = None, time = None, 
     if not filename is None:
         plt.savefig(filename)
 
+def DrawDiGraph(graph, pos = None, membership = None, nodelabels = None, edgescale = 1.0, nodesize = 0.05, selfLoopOffset = (0.05,0.05),
+                selfloopsize = 0.1, net_node_size = 500,
+                edgeweight = 'weight', arrow_sep = 0.0002, arrowheadlength = 0.03, arrowheadwidth = 0.03):
+
+    red_color = '#e41a1c'
+    black_color = '#262626'
+
+    def axis_set(ax):
+      # Remove top and right axes lines ("spines")
+      spines_to_remove = ['top', 'right', 'left', 'bottom']
+      for spine in spines_to_remove:
+          ax.spines[spine].set_visible(False)
+
+      ax.set_xticks([])
+      ax.set_yticks([])
+      ax.set(aspect = 1)
+
+      for xlabel in ax.axes.get_xticklabels():
+          xlabel.set_visible(False)
+
+      for ylabel in ax.axes.get_yticklabels():
+          ylabel.set_visible(False)
+
+      return ax
+
+    def ellipse_polyline(x0, y0, a, b, angle, n=100):
+      t = np.linspace(0, 2*np.pi, n, endpoint=False)
+      st = np.sin(t)
+      ct = np.cos(t)
+      angle = np.deg2rad(angle)
+      sa = np.sin(angle)
+      ca = np.cos(angle)
+      p = np.empty((n, 2))
+      p[:, 0] = x0 + a * ca * ct - b * sa * st
+      p[:, 1] = y0 + a * sa * ct + b * ca * st
+
+      return p
+
+    def straight_polyline(x0, y0, x1, y1, n=100):
+      t = np.linspace(0, 1.0, n, endpoint=False)
+      p = np.empty((n, 2))
+      p[:, 0] = x0 + t * (x1 - x0)
+      p[:, 1] = y0 + t * (y1 - y0)
+
+      return p
+
+    def IntersectionLineEllipse(line_x0, line_y0, line_x1, line_y1, ell_x0, ell_y0, ell_a, ell_b, ell_angle, n = 500):
+        linepoints = straight_polyline(line_x0, line_y0, line_x1, line_y1, n = n)
+        ellipsepoints = ellipse_polyline(ell_x0, ell_y0, ell_a, ell_b, ell_angle, n = n)
+
+        dist = cdist(linepoints, ellipsepoints)
+        indx = np.unravel_index(dist.argmin(), dist.shape)
+        return linepoints[indx[0]]
+
+    def ClosetPointonEllipse(x0, y0, ell_x0, ell_y0, ell_a, ell_b, ell_angle, n = 500):
+        ellipsepoints = ellipse_polyline(ell_x0, ell_y0, ell_a, ell_b, ell_angle, n = n)
+
+        dist = cdist(ellipsepoints, [[x0,y0]])
+        indx = np.unravel_index(dist.argmin(), dist.shape)
+        return ellipsepoints[indx[0]]
+
+
+    fig, ax = plt.subplots(ncols = 1, nrows = 1, figsize=(6,6))
+    fig.subplots_adjust(hspace = 0.1, wspace = 0.1)
+    
+    localaxis = axis_set(ax)
+    
+    try:
+      edge_weights = nx.get_edge_attributes(graph, 'weight')
+    except KeyError:
+      edge_weights = {edge:1.0 for edge in graph.edges()}
+
+    if pos is None:
+      pos = nx.spring_layout(graph)
+
+    drawnedges = []
+    for edge in graph.edges():
+        # self-loops
+        n1x, n1y = pos[edge[0]]
+        n2x, n2y = pos[edge[1]]
+
+        if edge[0] == edge[1]:
+            selfedge = Ellipse(xy = (n1x + selfLoopOffset[0], n1y + selfLoopOffset[1]) , width = selfloopsize, height = selfloopsize, 
+                               angle = 0, linewidth = edge_weights[edge] * edgescale, fill = False, ec = black_color, alpha = 1)
+            localaxis.add_artist(selfedge)
+            localaxis.arrow(n1x+selfLoopOffset[0]+arrowheadlength/2 , n1y+1, -0.1*selfloopsize  , 0 , head_length = arrowheadlength, \
+                            head_width = arrowheadwidth, fc= black_color, ec=black_color, lw = edge_weights[edge] * edgescale)
+    
+        if edge[0] != edge[1]:
+            if graph.has_edge(edge[1], edge[0]):
+                if not ((edge[1], edge[0]) in drawnedges):
+                    # double sided arrow
+                    arrowendx, arrowendy = IntersectionLineEllipse(n1x, n1y, n2x, n2y, n2x, n2y, nodesize, nodesize, 0)
+                    localaxis.arrow(n1x, n1y - arrow_sep, arrowendx - n1x, arrowendy - n1y + arrow_sep, head_length = arrowheadlength, \
+                                    head_width = arrowheadwidth, fc= black_color, ec=black_color, \
+                                    lw = edge_weights[edge] * edgescale, length_includes_head = True, shape = 'left')
+
+                    oarrowendx, oarrowendy = IntersectionLineEllipse(n2x, n2y, n1x, n1y, n1x, n1y, nodesize, nodesize, 0)
+                    localaxis.arrow(n2x, n2y + arrow_sep, oarrowendx - n2x, oarrowendy - n2y - arrow_sep, \
+                                    head_length = arrowheadlength, head_width = arrowheadwidth, fc= black_color, ec=black_color, \
+                                    lw = edge_weights[(edge[1], edge[0])] * edgescale, length_includes_head = True, shape = 'left')
+
+                    drawnedges.append(edge)
+            
+            else:
+                # single arrow
+                arrowendx, arrowendy = IntersectionLineEllipse(n1x, n1y, n2x, n2y, n2x, n2y, nodesize, nodesize, 0)
+                localaxis.arrow(n1x, n1y, arrowendx - n1x, arrowendy - n1y, head_length = arrowheadlength,\
+                                head_width = arrowheadwidth, fc= black_color, ec=black_color, \
+                                lw = edge_weights[edge] * edgescale, length_includes_head = True, shape = 'full')
+    
+    if membership is None:
+      bnodes = nx.draw_networkx_nodes(graph,pos, node_size = net_node_size, node_color=red_color, with_labels=False)
+    else:
+      bnodes = nx.draw_networkx_nodes(graph,pos,cmap=plt.get_cmap('Paired'), node_size = net_node_size, node_color=membership, with_labels=False)
+    
+    if not nodelabels is None:
+      nx.draw_networkx_labels(graph,pos,nodelabels,font_size=14)
