@@ -153,7 +153,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, num_runs=1, debug
 
                 if best_move_quality > cur_quality: 
                     cur_quality = best_move_quality
-                    if debug_level >= 2:
+                    if debug_level >= 3:
                         print(mover_class.__name__.ljust(15), 
                               "Accepted move: %s -> %s [q=%0.3f]"
                               % (to_str(membership), to_str(best_move_membership), best_move_quality)
@@ -165,7 +165,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, num_runs=1, debug
             for i in range(len(membership)):
                 membership[i] = remap[membership[i]]
 
-            if debug_level >= 1:
+            if debug_level >= 2:
                 print(mover_class.__name__.ljust(15), 
                       "Iteration %d, #=%d quality=%5.3f (improvement=%5.3f), m=%s" %
                       (iter_num, len(set(membership)), cur_quality, cur_quality - old_quality, to_str(membership))
@@ -183,7 +183,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, num_runs=1, debug
 
     for i in range(num_runs):
         if debug_level >= 1:
-            print("*** Run through %d ***" % i)
+            print("*** Run %d ***" % i)
 
         old_quality, cur_quality = None, None
 
