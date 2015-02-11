@@ -198,7 +198,7 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
       continue
 
     # this is an inset axes over the main axes
-    a = plt.axes([0.1 + 0.85 * vis_change_points.index(cp) / num_vis_change_points, .8, 1.0/num_vis_change_points, 1.0/num_vis_change_points])
+    a = plt.axes([0.1 + 0.85 * vis_change_points.index(cp) / num_vis_change_points, .8, 0.2, 0.2])
     plot_membership(change_points[cp], ax = a, colormap_name='Paired', node_size=node_size)
     a.text(0.0, 0.0, str(len(set(change_points[cp]))), fontsize = 20, ha='center', va='center', color = black_color)
     plt.setp(a, xticks=[], yticks=[])
