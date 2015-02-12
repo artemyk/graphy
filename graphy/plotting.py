@@ -212,121 +212,83 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
   ax1.plot(time, optmod_ts, color = red_color, lw = 3)
 
 
-def DrawDiGraph(graph, pos = None, membership = None, nodelabels = None, edgescale = 1.0, nodesize = 0.05, selfLoopOffset = (0.05,0.05),
-                selfloopsize = 0.1, net_node_size = 500,
-                edgeweight = 'weight', arrow_sep = 0.0002, arrowheadlength = 0.03, arrowheadwidth = 0.03,
-                font_size=14, cmap='Paired', ax=None):
+def plot_graph(G, pos, membership, nodelabels=None, nodesize=0.05, edgescale=1.0, nodeopts={}, labelopts={}, arrowopts={}, cmap='Paired'):
 
-    if ax is None:
-      ax = plt.gca()
+  def intersect_two_circles(xy1, r1, xy2, r2):
+    d = np.linalg.norm(xy2-xy1)
 
-    red_color = '#e41a1c'
-    black_color = '#262626'
+    a = (r1**2 - r2**2 + d**2) / (2 * d)
+    b = d - a
+    h = np.sqrt(r1**2 - a**2)
+    xy3 = xy1 + a * (xy2 - xy1) / d
 
-    def axis_set(ax):
-      # Remove top and right axes lines ("spines")
-      spines_to_remove = ['top', 'right', 'left', 'bottom']
-      for spine in spines_to_remove:
-          ax.spines[spine].set_visible(False)
+    ix = xy3[0] + h * (xy2[1] - xy1[1]) / d
+    iy = xy3[1] - h * (xy2[0] - xy1[0]) / d
 
-      ax.set_xticks([])
-      ax.set_yticks([])
-      ax.set(aspect = 1)
+    return np.array([ix, iy])
 
-      for xlabel in ax.axes.get_xticklabels():
-          xlabel.set_visible(False)
+  cmap_helper = MplColorHelper(cmap, membership.min(), membership.max())
+  
+  bbox = plt.gca().get_window_extent() 
+  asp_ratio = bbox.width/bbox.height
 
-      for ylabel in ax.axes.get_yticklabels():
-          ylabel.set_visible(False)
+  xys = np.array([pos[ndx] for ndx in range(len(pos))])
+  xys -= xys.min(axis=0)
+  xys /= xys.max(axis=0)
+  xys[:,0] *= asp_ratio
+  
+  plt.xlim([-(3*nodesize)*asp_ratio,(1+(3*nodesize))*asp_ratio])
+  plt.ylim([-(3*nodesize),1+(3*nodesize)])
+  plt.axis('off')
+  
+  try:
+    edge_weights = nx.get_edge_attributes(G, 'weight')
+  except KeyError:
+    edge_weights = {edge:1.0 for edge in graph.edges()}
+      
+  for edge in G.edges():
+      startxy = xys[edge[0],:].copy()
+      endxy   = xys[edge[1],:].copy()
+      arrowdict = dict(ec='k', fc='k', 
+          lw=edge_weights[edge]*edgescale, 
+          length_includes_head=True, 
+          shape='full',
+          head_length=nodesize*0.5,
+          head_width=nodesize*0.5)
+      for k, v in arrowopts.iteritems():
+          fdict[k] = v
 
-      return ax
+      if edge[0] == edge[1]:
+          loopoffset = np.sign(startxy - xys.mean(axis=0)) * nodesize * 1.05
+          cloop = plt.Circle(startxy + loopoffset, radius=nodesize*0.65, ec='k', fill=False, lw=edge_weights[edge]*edgescale)
+          plt.gca().add_artist(cloop)
+          arrowloc = intersect_two_circles(startxy, nodesize, startxy+loopoffset, nodesize*0.7)
+          arrowlocstart = arrowloc + (arrowloc - startxy)*1e-5
+          plt.arrow( arrowlocstart[0], arrowlocstart[1],  arrowloc[0]-arrowlocstart[0], arrowloc[1]-arrowlocstart[1], **arrowdict)
 
-    def ellipse_polyline(x0, y0, a, b, angle, n=100):
-      t = np.linspace(0, 2*np.pi, n, endpoint=False)
-      st = np.sin(t)
-      ct = np.cos(t)
-      angle = np.deg2rad(angle)
-      sa = np.sin(angle)
-      ca = np.cos(angle)
-      p = np.empty((n, 2))
-      p[:, 0] = x0 + a * ca * ct - b * sa * st
-      p[:, 1] = y0 + a * sa * ct + b * ca * st
-
-      return p
-
-    def straight_polyline(x0, y0, x1, y1, n=100):
-      t = np.linspace(0, 1.0, n, endpoint=False)
-      p = np.empty((n, 2))
-      p[:, 0] = x0 + t * (x1 - x0)
-      p[:, 1] = y0 + t * (y1 - y0)
-
-      return p
-
-    def IntersectionLineEllipse(line_x0, line_y0, line_x1, line_y1, ell_x0, ell_y0, ell_a, ell_b, ell_angle, n = 500):
-        linepoints = straight_polyline(line_x0, line_y0, line_x1, line_y1, n = n)
-        ellipsepoints = ellipse_polyline(ell_x0, ell_y0, ell_a, ell_b, ell_angle, n = n)
-
-        dist = cdist(linepoints, ellipsepoints)
-        indx = np.unravel_index(dist.argmin(), dist.shape)
-        return linepoints[indx[0]]
-
-    def ClosetPointonEllipse(x0, y0, ell_x0, ell_y0, ell_a, ell_b, ell_angle, n = 500):
-        ellipsepoints = ellipse_polyline(ell_x0, ell_y0, ell_a, ell_b, ell_angle, n = n)
-
-        dist = cdist(ellipsepoints, [[x0,y0]])
-        indx = np.unravel_index(dist.argmin(), dist.shape)
-        return ellipsepoints[indx[0]]
-
-    localaxis = axis_set(ax)
-    
-    try:
-      edge_weights = nx.get_edge_attributes(graph, 'weight')
-    except KeyError:
-      edge_weights = {edge:1.0 for edge in graph.edges()}
-
-    if pos is None:
-      pos = nx.spring_layout(graph)
-
-    drawnedges = []
-    for edge in graph.edges():
-        # self-loops
-        n1x, n1y = pos[edge[0]]
-        n2x, n2y = pos[edge[1]]
-
-        if edge[0] == edge[1]:
-            selfedge = Ellipse(xy = (n1x + selfLoopOffset[0], n1y + selfLoopOffset[1]) , width = selfloopsize, height = selfloopsize, 
-                               angle = 0, linewidth = edge_weights[edge] * edgescale, fill = False, ec = black_color, alpha = 1)
-            localaxis.add_artist(selfedge)
-            #localaxis.arrow(n1x+selfLoopOffset[0]+arrowheadlength/2 , n1y+1, -0.1*selfloopsize  , 0 , head_length = arrowheadlength, \
-            #                head_width = arrowheadwidth, fc= black_color, ec=black_color, lw = edge_weights[edge] * edgescale)
-    
-        if edge[0] != edge[1]:
-            if graph.has_edge(edge[1], edge[0]):
-                if not ((edge[1], edge[0]) in drawnedges):
-                    # double sided arrow
-                    arrowendx, arrowendy = IntersectionLineEllipse(n1x, n1y, n2x, n2y, n2x, n2y, nodesize, nodesize, 0)
-                    localaxis.arrow(n1x, n1y - arrow_sep, arrowendx - n1x, arrowendy - n1y + arrow_sep, head_length = arrowheadlength, \
-                                    head_width = arrowheadwidth, fc= black_color, ec=black_color, \
-                                    lw = edge_weights[edge] * edgescale, length_includes_head = True, shape = 'left')
-
-                    oarrowendx, oarrowendy = IntersectionLineEllipse(n2x, n2y, n1x, n1y, n1x, n1y, nodesize, nodesize, 0)
-                    localaxis.arrow(n2x, n2y + arrow_sep, oarrowendx - n2x, oarrowendy - n2y - arrow_sep, \
-                                    head_length = arrowheadlength, head_width = arrowheadwidth, fc= black_color, ec=black_color, \
-                                    lw = edge_weights[(edge[1], edge[0])] * edgescale, length_includes_head = True, shape = 'left')
-
-                    drawnedges.append(edge)
-            
-            else:
-                # single arrow
-                arrowendx, arrowendy = IntersectionLineEllipse(n1x, n1y, n2x, n2y, n2x, n2y, nodesize, nodesize, 0)
-                localaxis.arrow(n1x, n1y, arrowendx - n1x, arrowendy - n1y, head_length = arrowheadlength,\
-                                head_width = arrowheadwidth, fc= black_color, ec=black_color, \
-                                lw = edge_weights[edge] * edgescale, length_includes_head = True, shape = 'full')
-    
-    if membership is None:
-      bnodes = nx.draw_networkx_nodes(graph,pos, node_size = net_node_size, node_color=red_color, with_labels=False)
-    else:
-      bnodes = nx.draw_networkx_nodes(graph,pos,cmap=plt.get_cmap(cmap), node_size = net_node_size, node_color=membership, with_labels=False)
-    
-    if not nodelabels is None:
-      nx.draw_networkx_labels(graph,pos,nodelabels,font_size=font_size)
+      else:
+          angle   = np.arctan2(endxy[1]-startxy[1], endxy[0]-startxy[0])
+          offset  = np.array([np.cos(angle),np.sin(angle)])*nodesize
+          startxy += offset
+          endxy   -= offset            
+          
+          if False and (not nx.is_directed(G) or G.has_edge(edge[1], edge[0])):
+              if edge[0] > edge[1]: # will be drawn in the other direction
+                  continue
+              else:
+                  midxy = (startxy + endxy) / 2.0
+                  plt.arrow(midxy[0], midxy[1], endxy[0]-midxy[0], endxy[1]-midxy[1], **arrowdict)
+                  plt.arrow(midxy[0], midxy[1], startxy[0]-midxy[0], startxy[1]-midxy[1], **arrowdict)
+          else:
+              plt.arrow(startxy[0], startxy[1], endxy[0]-startxy[0], endxy[1]-startxy[1], **arrowdict)
+          
+          #frac = 0.05 / np.linalg.norm(np.array([ex-sx,ey-sy]))
+          #plt.annotate('', xytext=(sx,sy), xy=(ex+1e-4, ey), width=2, arrowprops=dict(arrowstyle=arrowstyle, frac=frac, facecolor='black'))
+              
+  
+  for ndx, xy in enumerate(xys):  # Plot nodes
+      cnode = plt.Circle((xy[0],xy[1]), ec='none',radius=nodesize, color=cmap_helper.get_rgb(membership[ndx]), **nodeopts)
+      plt.gca().add_artist(cnode)
+      if nodelabels is not None:
+          plt.text(xy[0],xy[1], nodelabels[ndx], ha='center', va='center', **labelopts)
+        
