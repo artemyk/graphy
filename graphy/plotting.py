@@ -272,7 +272,7 @@ def plot_graph(G, pos, membership, nodelabels=None, nodesize=0.05, edgescale=1.0
           startxy += offset
           endxy   -= offset            
           
-          if False and (not nx.is_directed(G) or G.has_edge(edge[1], edge[0])):
+          if not nx.is_directed(G) or G.has_edge(edge[1], edge[0]):
               if edge[0] > edge[1]: # will be drawn in the other direction
                   continue
               else:
