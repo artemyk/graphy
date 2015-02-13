@@ -100,6 +100,7 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
                          y2label='Change in Phase', x1label='Time',
                          state_linewidth=2,
                          changepoint_linewidth=2,
+                         network_axis_size = 0.2
                          ):
   """Make the Perturbation Modularity plots. 
 
@@ -124,6 +125,8 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
       Linewidth to use for the state plots.
   changepoint_linewidth : int (default 2)
       Linewidth to use for the changepoint lines.
+  network_axis_size : float (default 0.2)
+      Size of the axis object for visualizing network plots.
 
   """
     
@@ -188,7 +191,7 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
   num_vis_change_points = float(len(vis_change_points))
 
   for cp, mp in zip(cplist, mean_cp[1::]):
-    coord3 = transFigure.transform(ax1.transData.transform([cp, 1.0]))
+    coord3 = transFigure.transform(ax1.transData.transform([cp, ax1.get_ylim()[1]]))
     coord4 = transFigure.transform(ax2.transData.transform([cp, ax2.get_ylim()[0]]))
     fig.lines.append(mpl.lines.Line2D((coord3[0],coord4[0]),(coord3[1],coord4[1]),color=black_color,
                                transform=fig.transFigure, lw=changepoint_linewidth))
@@ -198,13 +201,13 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
       continue
 
     # this is an inset axes over the main axes
-    a = plt.axes([0.1 + 0.85 * vis_change_points.index(cp) / num_vis_change_points, .8, 0.2, 0.2])
+    a = plt.axes([0.1 + 0.85 * vis_change_points.index(cp) / num_vis_change_points, .8, network_axis_size, network_axis_size])
     plot_membership(change_points[cp], ax = a, colormap_name='Paired', node_size=node_size)
     a.text(0.0, 0.0, str(len(set(change_points[cp]))), fontsize = 20, ha='center', va='center', color = black_color)
     plt.setp(a, xticks=[], yticks=[])
 
     coord1 = transFigure.transform(a.transData.transform([0, -1.3]))
-    coord2 = transFigure.transform(ax1.transData.transform([mp, 1.0]))
+    coord2 = transFigure.transform(ax1.transData.transform([mp, ax1.get_ylim()[1]]))
     
     fig.lines.append(mpl.lines.Line2D((coord1[0],coord2[0]),(coord1[1],coord2[1]),color=black_color,
                                transform=fig.transFigure, lw=2))
