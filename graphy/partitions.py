@@ -176,12 +176,15 @@ def find_optimal(N, quality_func_obj, initial_membership=None, num_runs=1, debug
     # ***************************************************
     # Main function body
     # ***************************************************
-    if initial_membership is None:
-        membership = np.arange(N, dtype='int32')
-    else:
-        membership = initial_membership.copy()
 
+    best_membership, best_quality = None, None
     for i in range(num_runs):
+
+        if initial_membership is None:
+            membership = np.arange(N, dtype='int32')
+        else:
+            membership = initial_membership.copy()
+
         if debug_level >= 1:
             print("*** Run %d ***" % i)
 
@@ -194,6 +197,10 @@ def find_optimal(N, quality_func_obj, initial_membership=None, num_runs=1, debug
             membership, cur_quality = greedy_moves(membership, mover_class=NodeSwapper)
             membership, cur_quality = greedy_moves(membership, mover_class=CommSpliter)
 
+        if best_quality is None or best_quality < cur_quality:
+            best_membership = membership
+            best_quality = cur_quality
+            
     return membership
 
 
