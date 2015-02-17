@@ -34,6 +34,21 @@ def to_str(membership):
 
     return "[" + " ".join(map(str, membership)) + "]"
 
+def to_alphanum_str(membership):
+    m = renumber_membership(membership)
+    names = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@#$%^&*_=+-/?><♔♕♖♗♘♙♚♛♜♝♞♟"
+    if m.max() > len(names):
+        return to_str(membership)
+    return "[" + "".join([names[i] for i in membership]) + "]"
+
+def renumber_membership(membership):
+    r = membership.copy()
+    remap = { old_comm:new_comm for new_comm, old_comm in enumerate(set(membership)) }
+    for i in range(len(membership)):
+        r[i] = remap[membership[i]]
+    return r
+
+
 def find_optimal(N, quality_func_obj, initial_membership=None, num_runs=1, debug_level=0):
     """Find optimal decomposition.
 
@@ -161,9 +176,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, num_runs=1, debug
 
                     membership = best_move_membership
 
-            remap = { old_comm:new_comm for new_comm, old_comm in enumerate(set(membership)) }
-            for i in range(len(membership)):
-                membership[i] = remap[membership[i]]
+            membership = renumber_membership(membership)
 
             if debug_level >= 2:
                 print(mover_class.__name__.ljust(15), 

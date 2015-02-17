@@ -16,6 +16,16 @@ import networkx as nx
 import numpy as np
 import itertools
 
+def gen_ring_matrix(N):
+    mx = np.zeros(shape=(N,N))
+    for i in range(N):
+        mx[(i-1)%N,i] = 1.0
+        mx[i,(i-1)%N] = 1.0
+        mx[(i+1)%N,i] = 1.0
+        mx[i,(i+1)%N] = 1.0
+    return mx
+
+
 def gen_hierarchical_net(n, level):
     """Generate hiearchical graph using method proposed of:
     Ravasz E, Barabasi AL, Hierarchical organization in complex networks, PRE, 2003.
