@@ -14,7 +14,7 @@ from matplotlib.patches import Ellipse
 from scipy.spatial.distance import cdist
 
 
-def plot_graph(G, pos=None, colors=None, nodelabels=None, nodesize=0.05, 
+def plot_graph(G, pos=None, colors=None, nodelabels=None, nodesize=0.04, 
   edgescale=1.0, nodeopts={}, labelopts={}, arrowopts={}, cmap='Paired'):
   """Plot a graphs.  Supports both directed and undirected graphs.
   Undirected edges are drawn as lines while directed edges are drawn
@@ -117,49 +117,50 @@ def plot_graph(G, pos=None, colors=None, nodelabels=None, nodesize=0.05,
   except KeyError:
     edge_weights = {}
       
-    arrowdict = dict(ec='k', fc='k', 
-        length_includes_head=True, 
-        shape='full',
-        head_length=nodesize*0.5 if G.is_directed() else 0,
-        head_width =nodesize*0.5 if G.is_directed() else 0)
-    for k, v in arrowopts.iteritems():
-        arrowdict[k] = v
+  arrowdict = dict(ec='k', fc='k', 
+      length_includes_head=True  if G.is_directed() else False, 
+      shape='full',
+      head_length=nodesize*0.5 if G.is_directed() else 0,
+      head_width =nodesize*0.5 if G.is_directed() else 0)
+  for k, v in arrowopts.iteritems():
+      arrowdict[k] = v
 
-    for edge in G.edges():
-      startxy = xys[edge[0],:].copy()
-      endxy   = xys[edge[1],:].copy()
+  for edge in G.edges():
+    startxy = xys[edge[0],:].copy()
+    endxy   = xys[edge[1],:].copy()
 
-      edgesize = edge_weights.get(edge,1.0)*edgescale, 
-      arrowdict['lw'] = edgesize
+    edgesize = edge_weights.get(edge,1.0)*edgescale
+    arrowdict['lw'] = edgesize
 
-      if edge[0] == edge[1]:
-          loopoffset = np.sign(startxy - xys.mean(axis=0)) * nodesize * 1.05
-          cloop = plt.Circle(startxy + loopoffset, radius=nodesize*0.65, ec='k', fill=False, lw=edgesize)
-          plt.gca().add_artist(cloop)
-          arrowloc = intersect_two_circles(startxy, nodesize, startxy+loopoffset, nodesize*0.7)
-          arrowlocstart = arrowloc + (arrowloc - startxy)*1e-5
-          plt.arrow( arrowlocstart[0], arrowlocstart[1],  arrowloc[0]-arrowlocstart[0], arrowloc[1]-arrowlocstart[1], **arrowdict)
+    if edge[0] == edge[1]:
+        loopoffset = np.sign(startxy - xys.mean(axis=0)) * nodesize * 1.05
+        cloop = plt.Circle(startxy + loopoffset, radius=nodesize*0.65, ec='k', fill=False, lw=edgesize)
+        plt.gca().add_artist(cloop)
+        arrowloc = intersect_two_circles(startxy, nodesize, startxy+loopoffset, nodesize*0.7)
+        arrowlocstart = arrowloc + (arrowloc - startxy)*1e-5
+        print('here?')
+        plt.arrow( arrowlocstart[0], arrowlocstart[1],  arrowloc[0]-arrowlocstart[0], arrowloc[1]-arrowlocstart[1], **arrowdict)
 
-      else:
-          angle   = np.arctan2(endxy[1]-startxy[1], endxy[0]-startxy[0])
-          offset  = np.array([np.cos(angle),np.sin(angle)])*nodesize
-          startxy += offset
-          endxy   -= offset            
-          
-          if not nx.is_directed(G) or G.has_edge(edge[1], edge[0]):
-              if edge[0] > edge[1]: # will be drawn in the other direction
-                  continue
-              else:
-                  midxy = (startxy + endxy) / 2.0
-                  plt.arrow(midxy[0], midxy[1], endxy[0]-midxy[0], endxy[1]-midxy[1], **arrowdict)
-                  plt.arrow(midxy[0], midxy[1], startxy[0]-midxy[0], startxy[1]-midxy[1], **arrowdict)
-          else:
-              plt.arrow(startxy[0], startxy[1], endxy[0]-startxy[0], endxy[1]-startxy[1], **arrowdict)
-          
-          #frac = 0.05 / np.linalg.norm(np.array([ex-sx,ey-sy]))
-          #plt.annotate('', xytext=(sx,sy), xy=(ex+1e-4, ey), width=2, arrowprops=dict(arrowstyle=arrowstyle, frac=frac, facecolor='black'))
-              
-  
+    else:
+        angle   = np.arctan2(endxy[1]-startxy[1], endxy[0]-startxy[0])
+        offset  = np.array([np.cos(angle),np.sin(angle)])*nodesize
+        startxy += offset
+        endxy   -= offset            
+        
+        if not nx.is_directed(G) or G.has_edge(edge[1], edge[0]):
+            if edge[0] > edge[1]: # will be drawn in the other direction
+                continue
+            else:
+                midxy = (startxy + endxy) / 2.0
+                plt.arrow(midxy[0], midxy[1], endxy[0]-midxy[0], endxy[1]-midxy[1], **arrowdict)
+                plt.arrow(midxy[0], midxy[1], startxy[0]-midxy[0], startxy[1]-midxy[1], **arrowdict)
+        else:
+            plt.arrow(startxy[0], startxy[1], endxy[0]-startxy[0], endxy[1]-startxy[1], **arrowdict)
+        
+        #frac = 0.05 / np.linalg.norm(np.array([ex-sx,ey-sy]))
+        #plt.annotate('', xytext=(sx,sy), xy=(ex+1e-4, ey), width=2, arrowprops=dict(arrowstyle=arrowstyle, frac=frac, facecolor='black'))
+            
+
   for ndx, xy in enumerate(xys):  # Plot nodes
       cnode = plt.Circle((xy[0],xy[1]), ec='none',radius=nodesize, color=cmap_helper.get_rgb(colors[ndx]), **nodeopts)
       plt.gca().add_artist(cnode)
