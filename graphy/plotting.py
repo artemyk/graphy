@@ -17,6 +17,8 @@ from scipy.spatial.distance import cdist
 def plot_graph(G, pos=None, colors=None, nodelabels=None, nodesize=0.05, 
   edgescale=1.0, nodeopts={}, labelopts={}, arrowopts={}, cmap='Paired'):
   """Plot a graphs.  Supports both directed and undirected graphs.
+  Undirected edges are drawn as lines while directed edges are drawn
+  as arrows.
 
   For example:
 
@@ -115,21 +117,24 @@ def plot_graph(G, pos=None, colors=None, nodelabels=None, nodesize=0.05,
   except KeyError:
     edge_weights = {}
       
-  for edge in G.edges():
+    arrowdict = dict(ec='k', fc='k', 
+        length_includes_head=True, 
+        shape='full',
+        head_length=nodesize*0.5 if G.is_directed() else 0,
+        head_width =nodesize*0.5 if G.is_directed() else 0)
+    for k, v in arrowopts.iteritems():
+        arrowdict[k] = v
+
+    for edge in G.edges():
       startxy = xys[edge[0],:].copy()
       endxy   = xys[edge[1],:].copy()
-      arrowdict = dict(ec='k', fc='k', 
-          lw=edge_weights.get(edge,1.0)*edgescale, 
-          length_includes_head=True, 
-          shape='full',
-          head_length=nodesize*0.5 if G.is_directed() else 0,
-          head_width=nodesize*0.5)
-      for k, v in arrowopts.iteritems():
-          arrowdict[k] = v
+
+      edgesize = edge_weights.get(edge,1.0)*edgescale, 
+      arrowdict['lw'] = edgesize
 
       if edge[0] == edge[1]:
           loopoffset = np.sign(startxy - xys.mean(axis=0)) * nodesize * 1.05
-          cloop = plt.Circle(startxy + loopoffset, radius=nodesize*0.65, ec='k', fill=False, lw=edge_weights[edge]*edgescale)
+          cloop = plt.Circle(startxy + loopoffset, radius=nodesize*0.65, ec='k', fill=False, lw=edgesize)
           plt.gca().add_artist(cloop)
           arrowloc = intersect_two_circles(startxy, nodesize, startxy+loopoffset, nodesize*0.7)
           arrowlocstart = arrowloc + (arrowloc - startxy)*1e-5
