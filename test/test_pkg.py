@@ -18,7 +18,7 @@ def test_partition_search():
 	
 	qualityObj = graphy.qualityfuncs.Modularity(mx)
 
-	found_membership = graphy.partitions.find_optimal(mx.shape[0], qualityObj)
+	found_membership = graphy.partitions.find_optimal(qualityObj)
 
 	remapped = graphy.partitions.remap2match(found_membership, ground_truth)
 	assert((found_membership == ground_truth).all)

@@ -2,6 +2,8 @@ from __future__ import division, print_function, absolute_import
 import six
 range = six.moves.range
 
+import collections
+
 import numpy as np
 import networkx as nx
 import matplotlib as mpl
@@ -12,20 +14,9 @@ from matplotlib.patches import Ellipse
 from scipy.spatial.distance import cdist
 
 
-class MplColorHelper:
-  def __init__(self, cmap_name, start_val, stop_val):
-    self.cmap_name = cmap_name
-    self.cmap = plt.get_cmap(cmap_name)
-    self.norm = mpl.colors.Normalize(vmin=start_val, vmax=stop_val)
-    self.scalarMap = cm.ScalarMappable(norm=self.norm, cmap=self.cmap)
-
-  def get_rgb(self, val):
-    return self.scalarMap.to_rgba(val)
-
-
-def plot_membership(membership, pos=None, ax=None, colormap_name='Paired',
-  node_size=200, labels=None, font_size=10):
-  """Plot a circle visualizing community membership of nodes. 
+def plot_graph(G, pos=None, colors=None, nodelabels=None, nodesize=0.05, 
+  edgescale=1.0, nodeopts={}, labelopts={}, arrowopts={}, cmap='Paired'):
+  """Plot a graphs.  Supports both directed and undirected graphs.
 
   For example:
 
@@ -33,64 +24,143 @@ def plot_membership(membership, pos=None, ax=None, colormap_name='Paired',
       :include-source:
 
       >>> from graphy import plotting
-      >>> import numpy as np
-      >>> plotting.plot_membership(np.arange(12)/3)
+      >>> import networkx as nx
+      >>> G=nx.karate_club_graph()
+      >>> plotting.plot_graph(G, pos=nx.spring_layout(G), colors=range(G.number_of_nodes()))
       ...
 
 
   Parameters
   ----------
-  membership : list of int
-      Community membership vector.
+  G : networkx Graph object
+      Graph to plot.
   pos : list of tuples
       List of (x,y) positions of nodes.  If not specified, nodes
       are arranged along a circle.
-  ax : matplotlib axis object (default is current axis)
-      Matplotlib axis to plot onto.
-  colormap_name : string (default 'Paired')
-      Name of colormap to use to visualize community assignments.
-  node_size : int (default 200)
-      Size of nodes to draw.
-  labels : list of str (default None)
-      Node labels, if desired.
-  font_size : int (default 10)
-      Font size with which to plot the labels, if provided.
+  colors : list of ints (default None)
+      Color(s) to use for node faces, if desired.
+  nodelabels : list of strings (default None)
+      Labels to use for node labels, if desired.
+  nodesize : float (default 0.05)
+      Size of nodes.
+  edgescale : float (default 1.0)
+      Controls thickness of edges between nodes.
+  nodeopts : dict (default {})
+      Extra options to pass into plt.Circle call for plotting nodes.
+  labelopts : dict (default {})
+      Extra options to pass into plt.text call for plotting labels. 
+      Could be used to specify fontsize, for example.
+  arrowopts : dict (default {})
+      Extra options to pass into plt.arrow call for plotting edges.
+  cmap : string (default 'Paired')
+      Name of colormap to use.
+  ax : matplotlib axis (default plt.gca())
+      Axis to use for plotting graph.
 
   """
 
-  membership = np.asarray(membership).astype('int')
-  N = len(membership)
+
+  class MplColorHelper:
+    """Class that helps pick colors from specified colormaps.
+    """
+    def __init__(self, cmap_name, start_val, stop_val):
+      self.cmap_name = cmap_name
+      self.cmap = plt.get_cmap(cmap_name)
+      self.norm = mpl.colors.Normalize(vmin=start_val, vmax=stop_val)
+      self.scalarMap = cm.ScalarMappable(norm=self.norm, cmap=self.cmap)
+
+    def get_rgb(self, val):
+      return self.scalarMap.to_rgba(val)
+
+  def intersect_two_circles(xy1, r1, xy2, r2):
+    d = np.linalg.norm(xy2-xy1)
+
+    a = (r1**2 - r2**2 + d**2) / (2 * d)
+    b = d - a
+    h = np.sqrt(r1**2 - a**2)
+    xy3 = xy1 + a * (xy2 - xy1) / d
+
+    ix = xy3[0] + h * (xy2[1] - xy1[1]) / d
+    iy = xy3[1] - h * (xy2[0] - xy1[0]) / d
+
+    return np.array([ix, iy])
 
   if pos is None:
-      pos = np.asarray([[np.cos(angle), np.sin(angle)] 
-                        for angle in np.arange(0,2*np.pi, 2*np.pi/N)])
+    pos = nx.circular_layout(G)
+
+  if colors is None:
+    colors = 1
+
+  if not isinstance(colors, collections.Iterable):
+    colors = [colors,] * G.number_of_nodes()
+
+  colors = np.asarray(colors)
+
+  cmap_helper = MplColorHelper(cmap, colors.min(), colors.max())
+  
+  bbox = plt.gca().get_window_extent() 
+  asp_ratio = bbox.width/bbox.height
+
+  xys = np.array([pos[ndx] for ndx in range(len(pos))])
+  xys -= xys.min(axis=0)
+  xys /= xys.max(axis=0)
+  xys[:,0] *= asp_ratio
+  
+  plt.xlim([-(3*nodesize)*asp_ratio,(1+(3*nodesize))*asp_ratio])
+  plt.ylim([-(3*nodesize),1+(3*nodesize)])
+  plt.axis('off')
+  
+  try:
+    edge_weights = nx.get_edge_attributes(G, 'weight')
+  except KeyError:
+    edge_weights = {}
       
-  g = nx.Graph()
-  for i in range(N):
-      g.add_node(i)
+  for edge in G.edges():
+      startxy = xys[edge[0],:].copy()
+      endxy   = xys[edge[1],:].copy()
+      arrowdict = dict(ec='k', fc='k', 
+          lw=edge_weights.get(edge,1.0)*edgescale, 
+          length_includes_head=True, 
+          shape='full',
+          head_length=nodesize*0.5,
+          head_width=nodesize*0.5)
+      for k, v in arrowopts.iteritems():
+          arrowdict[k] = v
 
-  if pos is None:
-      pos = nx.spring_layout(g, weight='weight')
+      if edge[0] == edge[1]:
+          loopoffset = np.sign(startxy - xys.mean(axis=0)) * nodesize * 1.05
+          cloop = plt.Circle(startxy + loopoffset, radius=nodesize*0.65, ec='k', fill=False, lw=edge_weights[edge]*edgescale)
+          plt.gca().add_artist(cloop)
+          arrowloc = intersect_two_circles(startxy, nodesize, startxy+loopoffset, nodesize*0.7)
+          arrowlocstart = arrowloc + (arrowloc - startxy)*1e-5
+          plt.arrow( arrowlocstart[0], arrowlocstart[1],  arrowloc[0]-arrowlocstart[0], arrowloc[1]-arrowlocstart[1], **arrowdict)
 
-  COL = MplColorHelper(colormap_name, 0, N)
-
-  membership_colors = []
-  for m in membership:
-    bin_repr = np.array(list(map(int, bin(m)[2:])))
-    new_col = np.sum([v*2**-(p+1) for p, v in enumerate(bin_repr[::-1])])
-    membership_colors.append(int(N*new_col))
+      else:
+          angle   = np.arctan2(endxy[1]-startxy[1], endxy[0]-startxy[0])
+          offset  = np.array([np.cos(angle),np.sin(angle)])*nodesize
+          startxy += offset
+          endxy   -= offset            
+          
+          if not nx.is_directed(G) or G.has_edge(edge[1], edge[0]):
+              if edge[0] > edge[1]: # will be drawn in the other direction
+                  continue
+              else:
+                  midxy = (startxy + endxy) / 2.0
+                  plt.arrow(midxy[0], midxy[1], endxy[0]-midxy[0], endxy[1]-midxy[1], **arrowdict)
+                  plt.arrow(midxy[0], midxy[1], startxy[0]-midxy[0], startxy[1]-midxy[1], **arrowdict)
+          else:
+              plt.arrow(startxy[0], startxy[1], endxy[0]-startxy[0], endxy[1]-startxy[1], **arrowdict)
+          
+          #frac = 0.05 / np.linalg.norm(np.array([ex-sx,ey-sy]))
+          #plt.annotate('', xytext=(sx,sy), xy=(ex+1e-4, ey), width=2, arrowprops=dict(arrowstyle=arrowstyle, frac=frac, facecolor='black'))
+              
   
-  nx.draw(g, 
-          pos=pos, 
-          width=2,
-          node_size=node_size,
-          with_labels=False, 
-          node_color=COL.get_rgb(membership_colors), 
-          ax=ax)
-  
-  if labels is not None:
-    nx.draw_networkx_labels(g, pos, dict(zip(range(N), labels)), 
-      font_size=font_size, ax=ax)
+  for ndx, xy in enumerate(xys):  # Plot nodes
+      cnode = plt.Circle((xy[0],xy[1]), ec='none',radius=nodesize, color=cmap_helper.get_rgb(colors[ndx]), **nodeopts)
+      plt.gca().add_artist(cnode)
+      if nodelabels is not None:
+          plt.text(xy[0],xy[1], nodelabels[ndx], ha='center', va='center', **labelopts)
+        
 
 
 def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None, 
@@ -99,8 +169,8 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
                          y1label='Perturbation \n Modularity', 
                          y2label='Change in Phase', x1label='Time',
                          state_linewidth=2,
-                         changepoint_linewidth=2,
-                         network_axis_size = 0.2
+                         changepoint_linewidth=1,
+                         network_axis_size=0.2
                          ):
   """Make the Perturbation Modularity plots. 
 
@@ -123,7 +193,7 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
       node size for partition graphs
   state_linewidth : int (default 2)
       Linewidth to use for the state plots.
-  changepoint_linewidth : int (default 2)
+  changepoint_linewidth : int (default 1)
       Linewidth to use for the changepoint lines.
   network_axis_size : float (default 0.2)
       Size of the axis object for visualizing network plots.
@@ -176,7 +246,9 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
   plt.xlim([time.min(), time.max()])
 
   # plot the background modularity timeseries
-  ax1.plot(time, mod_ts , color = blue_color, ls = '--', lw = 1)
+  print(mod_ts.shape)
+  print(time.shape)
+  ax1.plot(time, mod_ts, color=blue_color, ls = '--', lw = 1)
 
   transFigure = fig.transFigure.inverted()
   
@@ -193,7 +265,7 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
   for cp, mp in zip(cplist, mean_cp[1::]):
     coord3 = transFigure.transform(ax1.transData.transform([cp, ax1.get_ylim()[1]]))
     coord4 = transFigure.transform(ax2.transData.transform([cp, ax2.get_ylim()[0]]))
-    fig.lines.append(mpl.lines.Line2D((coord3[0],coord4[0]),(coord3[1],coord4[1]),color=black_color,
+    fig.lines.append(mpl.lines.Line2D((coord3[0],coord4[0]),(coord3[1],coord4[1]),color='gray',
                                transform=fig.transFigure, lw=changepoint_linewidth))
 
   for cp, mp in zip(cplist, mean_cp[1::]):
@@ -212,86 +284,4 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
     fig.lines.append(mpl.lines.Line2D((coord1[0],coord2[0]),(coord1[1],coord2[1]),color=black_color,
                                transform=fig.transFigure, lw=2))
 
-  ax1.plot(time, optmod_ts, color = red_color, lw = 3)
-
-
-def plot_graph(G, pos, membership, nodelabels=None, nodesize=0.05, edgescale=1.0, nodeopts={}, labelopts={}, arrowopts={}, cmap='Paired'):
-
-  def intersect_two_circles(xy1, r1, xy2, r2):
-    d = np.linalg.norm(xy2-xy1)
-
-    a = (r1**2 - r2**2 + d**2) / (2 * d)
-    b = d - a
-    h = np.sqrt(r1**2 - a**2)
-    xy3 = xy1 + a * (xy2 - xy1) / d
-
-    ix = xy3[0] + h * (xy2[1] - xy1[1]) / d
-    iy = xy3[1] - h * (xy2[0] - xy1[0]) / d
-
-    return np.array([ix, iy])
-
-  cmap_helper = MplColorHelper(cmap, membership.min(), membership.max())
-  
-  bbox = plt.gca().get_window_extent() 
-  asp_ratio = bbox.width/bbox.height
-
-  xys = np.array([pos[ndx] for ndx in range(len(pos))])
-  xys -= xys.min(axis=0)
-  xys /= xys.max(axis=0)
-  xys[:,0] *= asp_ratio
-  
-  plt.xlim([-(3*nodesize)*asp_ratio,(1+(3*nodesize))*asp_ratio])
-  plt.ylim([-(3*nodesize),1+(3*nodesize)])
-  plt.axis('off')
-  
-  try:
-    edge_weights = nx.get_edge_attributes(G, 'weight')
-  except KeyError:
-    edge_weights = {edge:1.0 for edge in graph.edges()}
-      
-  for edge in G.edges():
-      startxy = xys[edge[0],:].copy()
-      endxy   = xys[edge[1],:].copy()
-      arrowdict = dict(ec='k', fc='k', 
-          lw=edge_weights[edge]*edgescale, 
-          length_includes_head=True, 
-          shape='full',
-          head_length=nodesize*0.5,
-          head_width=nodesize*0.5)
-      for k, v in arrowopts.iteritems():
-          fdict[k] = v
-
-      if edge[0] == edge[1]:
-          loopoffset = np.sign(startxy - xys.mean(axis=0)) * nodesize * 1.05
-          cloop = plt.Circle(startxy + loopoffset, radius=nodesize*0.65, ec='k', fill=False, lw=edge_weights[edge]*edgescale)
-          plt.gca().add_artist(cloop)
-          arrowloc = intersect_two_circles(startxy, nodesize, startxy+loopoffset, nodesize*0.7)
-          arrowlocstart = arrowloc + (arrowloc - startxy)*1e-5
-          plt.arrow( arrowlocstart[0], arrowlocstart[1],  arrowloc[0]-arrowlocstart[0], arrowloc[1]-arrowlocstart[1], **arrowdict)
-
-      else:
-          angle   = np.arctan2(endxy[1]-startxy[1], endxy[0]-startxy[0])
-          offset  = np.array([np.cos(angle),np.sin(angle)])*nodesize
-          startxy += offset
-          endxy   -= offset            
-          
-          if not nx.is_directed(G) or G.has_edge(edge[1], edge[0]):
-              if edge[0] > edge[1]: # will be drawn in the other direction
-                  continue
-              else:
-                  midxy = (startxy + endxy) / 2.0
-                  plt.arrow(midxy[0], midxy[1], endxy[0]-midxy[0], endxy[1]-midxy[1], **arrowdict)
-                  plt.arrow(midxy[0], midxy[1], startxy[0]-midxy[0], startxy[1]-midxy[1], **arrowdict)
-          else:
-              plt.arrow(startxy[0], startxy[1], endxy[0]-startxy[0], endxy[1]-startxy[1], **arrowdict)
-          
-          #frac = 0.05 / np.linalg.norm(np.array([ex-sx,ey-sy]))
-          #plt.annotate('', xytext=(sx,sy), xy=(ex+1e-4, ey), width=2, arrowprops=dict(arrowstyle=arrowstyle, frac=frac, facecolor='black'))
-              
-  
-  for ndx, xy in enumerate(xys):  # Plot nodes
-      cnode = plt.Circle((xy[0],xy[1]), ec='none',radius=nodesize, color=cmap_helper.get_rgb(membership[ndx]), **nodeopts)
-      plt.gca().add_artist(cnode)
-      if nodelabels is not None:
-          plt.text(xy[0],xy[1], nodelabels[ndx], ha='center', va='center', **labelopts)
-        
+  ax1.plot(time, optmod_ts, color = red_color, lw=3)

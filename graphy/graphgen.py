@@ -16,13 +16,39 @@ import networkx as nx
 import numpy as np
 import itertools
 
-def gen_ring_matrix(N):
+def gen_ring_matrix(N, neighs_per_side=1):
+    """Generate a ring-lattice matrix.
+
+    For example:
+
+    .. plot::
+        :include-source:
+
+        >>> import graphy
+        >>> mx = graphy.graphgen.gen_ring_matrix(30, 2)
+        >>> graphy.plotting.plot_graph(nx.from_numpy_matrix(mx))
+        ...
+
+    Parameters
+    ----------
+    N : int
+        How many nodes.
+    neighs_per_side : int
+        How many neighbors on each side should be connected to each node.
+
+    Returns
+    -------
+    np.array matrix
+        The connectivity matrix
+        
+    """    
     mx = np.zeros(shape=(N,N))
+    neigh_ndxs = 1+np.arange(neighs_per_side,dtype='int')
     for i in range(N):
-        mx[(i-1)%N,i] = 1.0
-        mx[i,(i-1)%N] = 1.0
-        mx[(i+1)%N,i] = 1.0
-        mx[i,(i+1)%N] = 1.0
+        mx[(i-neigh_ndxs)%N,i] = 1.0
+        mx[i,(i-neigh_ndxs)%N] = 1.0
+        mx[(i+neigh_ndxs)%N,i] = 1.0
+        mx[i,(i+neigh_ndxs)%N] = 1.0
     return mx
 
 
@@ -33,7 +59,7 @@ def gen_hierarchical_net(n, level):
     Parameters
     ----------
     n : int
-        Number of nodes
+        Number of nodes in the lowest level.
     level : int
         Number of hierarchical levels to create
 
@@ -215,7 +241,10 @@ def gen_hierarchical_weighted_block_matrix(blocksize, numblocks, numlevels, leve
 
     for indx, i in enumerate(blockcoords):
         for jndx, j in enumerate(blockcoords):
-            w = level_weights[get_match_level(i,j)]
+            mlevel = get_match_level(i,j)
+            if mlevel >= len(level_weights):
+                raise ValueError('Not enough level_weights specified')
+            w = level_weights[mlevel]
             mx[indx*blocksize:(indx+1)*blocksize,jndx*blocksize:(jndx+1)*blocksize] = w
 
     np.fill_diagonal(mx, 0)

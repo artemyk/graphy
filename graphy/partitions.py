@@ -35,13 +35,14 @@ def to_str(membership):
     return "[" + " ".join(map(str, membership)) + "]"
 
 def to_alphanum_str(membership):
-    m = renumber_membership(membership)
-    names = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@#$%^&*_=+-/?><♔♕♖♗♘♙♚♛♜♝♞♟"
-    if m.max() > len(names):
+    # TODO: DOCUMENT
+    names = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@#$%^&*_=+-/?><"
+    if membership.max() >= len(names):
         return to_str(membership)
     return "[" + "".join([names[i] for i in membership]) + "]"
 
 def renumber_membership(membership):
+    # TODO: DOCUMENT
     r = membership.copy()
     remap = { old_comm:new_comm for new_comm, old_comm in enumerate(set(membership)) }
     for i in range(len(membership)):
@@ -49,7 +50,7 @@ def renumber_membership(membership):
     return r
 
 
-def find_optimal(N, quality_func_obj, initial_membership=None, num_runs=1, debug_level=0):
+def find_optimal(quality_func_obj, initial_membership=None, num_runs=1, debug_level=0):
     """Find optimal decomposition.
 
     Parameters
@@ -194,8 +195,11 @@ def find_optimal(N, quality_func_obj, initial_membership=None, num_runs=1, debug
     for i in range(num_runs):
 
         if initial_membership is None:
-            membership = np.arange(N, dtype='int32')
+            membership = np.arange(quality_func_obj.N, dtype='int')
         else:
+            if len(initial_membership) != quality_func_obj.N:
+                raise ValueError('Length of initial_membership is different from that ' +
+                                 'expected by quality_func_obj.')
             membership = initial_membership.copy()
 
         if debug_level >= 1:
@@ -220,7 +224,7 @@ def find_optimal(N, quality_func_obj, initial_membership=None, num_runs=1, debug
 def get_minsize_assignment(N, min_comm_size):
     # Min-size community assignment
     num_comms = int(N / min_comm_size)
-    membership = -np.ones(N, dtype='int32')  # -1 means non-assigned
+    membership = -np.ones(N, dtype='int')  # -1 means non-assigned
     for c in range(num_comms):
         left_to_assign = np.flatnonzero(membership == -1)
         assign = np.random.choice(left_to_assign, min_comm_size, replace=False)
@@ -273,5 +277,5 @@ def remap2match(partition1, partition2):
         nmap[old_c] = new_c
         to_remap        = to_remap        - set([old_c,])
         allowed_matches = allowed_matches - set([new_c,])
-    return np.array([nmap[c] for c in partition1], dtype='int32')
+    return np.array([nmap[c] for c in partition1], dtype='int')
 
