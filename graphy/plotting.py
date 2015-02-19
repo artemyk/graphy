@@ -118,7 +118,7 @@ def plot_graph(G, pos=None, colors=None, nodelabels=None, nodesize=0.04,
     edge_weights = {}
       
   arrowdict = dict(ec='k', fc='k', 
-      length_includes_head=True  if G.is_directed() else False, 
+      length_includes_head=True, 
       shape='full',
       head_length=nodesize*0.5 if G.is_directed() else 0,
       head_width =nodesize*0.5 if G.is_directed() else 0)
