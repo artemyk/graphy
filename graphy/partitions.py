@@ -22,7 +22,7 @@ def to_str(membership):
 
     Parameters
     ----------
-    membership
+    membership : np.array or list
         Membership array to convert
 
     Returns
@@ -35,19 +35,30 @@ def to_str(membership):
     return "[" + " ".join(map(str, membership)) + "]"
 
 def to_alphanum_str(membership):
-    # TODO: DOCUMENT
+    """Convert membership array to short string.
+
+    Example:
+
+    >>> from graphy import partitions
+    >>> print(partitions.to_alphanum_str([0,0,0,1,1,1,2,3,4,20,20,20]))
+    [000111234KKK]
+
+    Parameters
+    ----------
+    membership : np.array or list
+        Membership array to convert
+
+    Returns
+    -------
+    str
+        Short pretty string
+
+    """
+    membership = np.asarray(membership)
     names = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@#$%^&*_=+-/?><"
     if membership.max() >= len(names):
         return to_str(membership)
     return "[" + "".join([names[i] for i in membership]) + "]"
-
-def renumber_membership(membership):
-    # TODO: DOCUMENT
-    r = membership.copy()
-    remap = { old_comm:new_comm for new_comm, old_comm in enumerate(set(membership)) }
-    for i in range(len(membership)):
-        r[i] = remap[membership[i]]
-    return r
 
 
 def find_optimal(quality_func_obj, initial_membership=None, num_runs=1, debug_level=0):
@@ -55,8 +66,6 @@ def find_optimal(quality_func_obj, initial_membership=None, num_runs=1, debug_le
 
     Parameters
     ----------
-    N : int
-        size of membership vector (i.e. number of components)
     quality_func_obj : instance of :class:`graphy.qualityfuncs.QualityFunc`
         object that implement `quality` method that can be called on
         membership vector.
@@ -222,7 +231,22 @@ def find_optimal(quality_func_obj, initial_membership=None, num_runs=1, debug_le
 
 
 def get_minsize_assignment(N, min_comm_size):
-    # Min-size community assignment
+    """Create membership vector where each community contains at least
+    as a certain number of nodes.
+
+    Parameters
+    ----------
+    N : int
+        Desired length of membership vector
+    min_comm_size : int
+        Minimum number of nodes each community should have.
+
+    Returns
+    -------
+    np.array
+        Membership vector
+
+    """
     num_comms = int(N / min_comm_size)
     membership = -np.ones(N, dtype='int')  # -1 means non-assigned
     for c in range(num_comms):
@@ -233,6 +257,38 @@ def get_minsize_assignment(N, min_comm_size):
     membership[membership == -1] = np.random.randint(num_comms, size=np.sum(membership == -1))
     
     return membership
+
+
+
+
+def renumber_membership(membership):
+    """Renumber membership vector so that community numbers begin with 0 and increase
+    consecutively.
+
+    Example:
+
+    >>> from graphy import partitions
+    >>> print(partitions.renumber_membership([10,10,10,31,31,31,32,33,4,20]))
+    [3 3 3 5 5 5 0 1 2 4]
+
+    Parameters
+    ----------
+    membership : np.array
+        Membership array to renumber
+
+    Returns
+    -------
+    np.array
+        Renumber membershp array
+
+    """
+    membership = np.asarray(membership)
+    r = membership.copy()
+    remap = { old_comm:new_comm for new_comm, old_comm in enumerate(set(membership)) }
+    for i in range(len(membership)):
+        r[i] = remap[membership[i]]
+    return r
+
 
 
 def remap2match(partition1, partition2):
@@ -247,9 +303,9 @@ def remap2match(partition1, partition2):
 
     Parameters
     ----------
-    partition1 : list or np.array
+    partition1 : np.array or list
         Membership assignment to remap
-    partition2 : list or np.array
+    partition2 : np.array or list
         Membership assignment to match
 
     Returns

@@ -43,7 +43,7 @@ class Modularity(QualityFunction):
   def __init__(self, mx):
     """Class that implements Newman's modularity quality function.
     """
-    self.mx = mx.astype('float')
+    self.mx = np.asarray(mx).astype('float')
     self.ks = self.mx.sum(axis=1)
     self.total_stubs = self.ks.sum()
     self._N = mx.shape[0]

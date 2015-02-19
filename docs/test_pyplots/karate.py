@@ -2,11 +2,8 @@ import numpy as np
 import networkx as nx
 import graphy
 
-mx = np.array(nx.to_numpy_matrix(nx.karate_club_graph()))
-
-qualityObj = graphy.qualityfuncs.Modularity(mx)
-
+G = nx.karate_club_graph()
+qualityObj = graphy.qualityfuncs.Modularity(nx.to_numpy_matrix(G))
 best_membership = graphy.partitions.find_optimal(qualityObj)
-
-nx.draw(nx.from_numpy_matrix(mx), node_color=best_membership)
+graphy.plotting.plot_graph(G, pos=nx.spring_layout(G), colors=best_membership)
 
