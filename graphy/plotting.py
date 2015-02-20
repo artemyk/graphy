@@ -33,8 +33,9 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
 
   Parameters
   ----------
-  G : networkx Graph object
-      Graph to plot.
+  G : networkx Graph object or 2-d np.array
+      Graph to plot, either instance of networkx Graph or a 2-d connectivity 
+      matrix.
   pos : list of tuples
       List of (x,y) positions of nodes.  If not specified, nodes
       are arranged along a circle.
@@ -82,6 +83,11 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
     iy = xy3[1] - h * (xy2[0] - xy1[0]) / d
 
     return np.array([ix, iy])
+
+  if isinstance(G, (np.ndarray, np.generic) ):
+    G = nx.from_numpy_matrix(G, create_using=nx.DiGraph())
+  elif not isinstance(G, nx.Graph):
+    raise ValueError('Unknown type of graph: %s' % str(type(G)))
 
   if pos is None:
     pos = nx.circular_layout(G)
