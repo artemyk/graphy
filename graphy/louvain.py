@@ -21,14 +21,13 @@ def optimize_modularity(conn_mx, debug=False):
   For example:
 
   .. plot::
-      :include-source:
+    :include-source:
 
-      >>> import networkx as nx
-      >>> import graphy
-      >>> G = nx.karate_club_graph()
-      >>> best_membership, q = graphy.louvain.optimize_modularity(nx.to_numpy_matrix(G))
-      >>> graphy.plotting.plot_graph(G, pos=nx.spring_layout(G), colors=best_membership)
-      ...
+    >>> import networkx as nx
+    >>> import graphy
+    >>> G = nx.karate_club_graph()
+    >>> best_membership, q = graphy.louvain.optimize_modularity(nx.to_numpy_matrix(G))
+    >>> graphy.plotting.plot_graph(G, pos=nx.spring_layout(G), colors=best_membership) # doctest: +SKIP
 
 
   Parameters
