@@ -26,7 +26,7 @@ def gen_ring_matrix(N, neighs_per_side=1):
 
       >>> import graphy
       >>> mx = graphy.graphgen.gen_ring_matrix(30, 5)
-      >>> graphy.plotting.plot_graph(nx.from_numpy_matrix(mx)) # doctest: +SKIP
+      >>> graphy.plotting.plot_graph(mx) # doctest: +SKIP
 
 
     Parameters
