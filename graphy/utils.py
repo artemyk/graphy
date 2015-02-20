@@ -18,6 +18,7 @@ def get_laplacian(mx):
       Matrix representing graph
 
   Returns
+  -------
   2-dimensional np.array
       Laplacian of graph
 
