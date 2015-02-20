@@ -27,7 +27,7 @@ def optimize_modularity(conn_mx, debug=False):
     >>> import graphy
     >>> G = nx.karate_club_graph()
     >>> best_membership, q = graphy.louvain.optimize_modularity(nx.to_numpy_matrix(G))
-    >>> graphy.plotting.plot_graph(G, pos=nx.spring_layout(G), colors=best_membership) # doctest: +SKIP
+    >>> print best_membership, q # doctest: +SKIP
 
 
   Parameters
