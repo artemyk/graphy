@@ -10,12 +10,13 @@ import numpy as np
 import subprocess
 import tempfile
 import os
+import scipy.sparse as sp
 
 def optimize_modularity(conn_mx, debug=False):
-  """Optimize directed, weighted Newman's modularity 
+  """Optimize directed, weighted Newman's modularity
   using the Louvain algorithm.
-  
-  This uses C++ implementation from 
+
+  This uses C++ implementation from
   https://github.com/raldecoa/SurpriseMe/tree/master/src/CPM
 
   For example:
@@ -29,7 +30,7 @@ def optimize_modularity(conn_mx, debug=False):
 
   Parameters
   ----------
-  conn_mx : 2-dimensional np.array
+  conn_mx : 2-dimensional np.array or scipy.sparse matrix
     Connectivity matrix.
   debug : bool (default False)
     If True, prints various debugging information.
@@ -40,12 +41,17 @@ def optimize_modularity(conn_mx, debug=False):
     Optimal membership vector indicating community membership of each node.
   float
     Modularity value corresponding to the optimal membership vector. Notice that
-    because the modularity value is computed by adding up increments over 
+    because the modularity value is computed by adding up increments over
     many moves, this may only be accurate to a few decimal places.
 
   """
 
-  conn_mx = np.asarray(conn_mx)
+  is_sparse = sp.isspmatrix(conn_mx)
+  if is_sparse:
+      # transform to list of lists
+      conn_mx = conn_mx.tolil()
+  else:
+      conn_mx = np.asarray(conn_mx)
 
   if conn_mx.shape[0] != conn_mx.shape[1]:
       raise ValueError('conn mx should be square')
@@ -56,17 +62,32 @@ def optimize_modularity(conn_mx, debug=False):
   NODEMAP_FILE = os.path.join(DIR, 'nmap.bin')
   CONF_FILE    = os.path.join(DIR, 'conf.bin')
 
-  with open(NETWORK_FILE, 'w') as f:
-      f.write('>\n')
-      for ndx in range(conn_mx.shape[0]):
-          f.write('%d %d\n' % (ndx, ndx))
-      f.write('>\n0 0\n>\n')
-      for ndx, r in enumerate(conn_mx):
-          conns = np.flatnonzero(r)
-          if not len(conns):
-              f.write('%d %d %0.5f 0\n' % (ndx, 0, 0))
-          for c in conns:
-              f.write('%d %d %0.5f 0\n' % (ndx, c, r[c]))
+  # write pajek
+  if is_sparse:
+      with open(NETWORK_FILE, 'w') as f:
+          f.write('>\n')
+          for ndx in range(conn_mx.shape[0]):
+              f.write('%d %d\n' % (ndx, ndx))
+          f.write('>\n0 0\n>\n')
+          for ndx, conns in enumerate(conn_mx.rows):
+              r = conn_mx.data[ndx]
+              if not len(conns):
+                  f.write('%d %d %0.5f 0\n' % (ndx, 0, 0))
+              for i in range(len(conns)):
+                  c = conns[i]
+                  f.write('%d %d %0.5f 0\n' % (ndx, c, r[i]))
+  else:
+      with open(NETWORK_FILE, 'w') as f:
+          f.write('>\n')
+          for ndx in range(conn_mx.shape[0]):
+              f.write('%d %d\n' % (ndx, ndx))
+          f.write('>\n0 0\n>\n')
+          for ndx, r in enumerate(conn_mx):
+              conns = np.flatnonzero(r)
+              if not len(conns):
+                  f.write('%d %d %0.5f 0\n' % (ndx, 0, 0))
+              for c in conns:
+                  f.write('%d %d %0.5f 0\n' % (ndx, c, r[c]))
 
   if debug:
     print("**** NETWORK FILE: ****")
@@ -75,13 +96,13 @@ def optimize_modularity(conn_mx, debug=False):
     print()
 
   bin_dir = os.path.join(os.path.dirname(__file__),'..','external','SurpriseMeCPM','bin')
-  subprocess.call([os.path.join(bin_dir,'slicer'), 
-                   '-i', NETWORK_FILE, 
-                   '-o', OUTPUT_FILE, 
-                   '-n', NODEMAP_FILE, 
+  subprocess.call([os.path.join(bin_dir,'slicer'),
+                   '-i', NETWORK_FILE,
+                   '-o', OUTPUT_FILE,
+                   '-n', NODEMAP_FILE,
                    '-c', CONF_FILE], stderr=subprocess.PIPE)
-  res = subprocess.Popen([os.path.join(bin_dir,'community'), 
-                          OUTPUT_FILE, 
+  res = subprocess.Popen([os.path.join(bin_dir,'community'),
+                          OUTPUT_FILE,
                           CONF_FILE],
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
