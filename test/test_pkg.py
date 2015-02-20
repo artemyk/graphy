@@ -41,3 +41,16 @@ def test_gen():
 		 [0.1 ,0.1 ,0.1 ,0.1 ,0.2 ,0.2 ,0.3 ,0. ]]
 	)
 	np.testing.assert_allclose(mx3, trg)
+
+def test_louvain():
+	conn_mx = graphy.graphgen.gen_hierarchical_weighted_block_matrix(5, 2, 2, [1, 0.1, 0.01])
+
+	dirMod = graphy.qualityfuncs.DirectedModularity(conn_mx)
+	best_membership, q = graphy.louvain.optimize_modularity(conn_mx)
+
+	assert(np.abs( q - dirMod.quality(best_membership) ) < 1e-2)
+
+	groundtruth = np.array([0,0,0,0,0,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3])
+	best_membership = graphy.partitions.remap2match(best_membership,groundtruth)
+
+	assert(np.array_equal(groundtruth, best_membership))

@@ -23,11 +23,11 @@ graphy module Index
    :maxdepth: 2
 
    graphy.partitions
+   graphy.louvain
    graphy.graphgen
    graphy.plotting
    graphy.qualityfuncs
    graphy.utils
-
 
 
 Indices and tables

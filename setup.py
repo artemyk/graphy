@@ -1,11 +1,20 @@
 import os
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext as _build_ext
+import subprocess
 
 PKG = 'graphy'
 
 # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
 class build_ext(_build_ext):
+    def run(self):
+        print
+        print "*** Running make on Louvain code..."
+        subprocess.call('cd external/SurpriseMeCPM ; make', shell=True)
+        print 
+        print
+        _build_ext.run(self)
+
     def finalize_options(self):
         _build_ext.finalize_options(self)
         # Prevent numpy from thinking it is still in its setup process:
