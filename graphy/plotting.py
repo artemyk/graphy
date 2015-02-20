@@ -28,8 +28,7 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
       >>> from graphy import plotting
       >>> import networkx as nx
       >>> G=nx.karate_club_graph()
-      >>> plotting.plot_graph(G, pos=nx.spring_layout(G), colors=range(G.number_of_nodes()))
-      ...
+      >>> plotting.plot_graph(G, pos=nx.spring_layout(G), colors=range(G.number_of_nodes())) # doctest: +SKIP
 
 
   Parameters
