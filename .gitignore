@@ -1,0 +1,6 @@
+*.pyc
+*.o
+external/SurpriseMeCPM/*/
+.ropeproject/
+*.egg-info/
+*.egg/
