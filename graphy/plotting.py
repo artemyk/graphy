@@ -260,8 +260,6 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
   plt.xlim([time.min(), time.max()])
 
   # plot the background modularity timeseries
-  print(mod_ts.shape)
-  print(time.shape)
   ax1.plot(time, mod_ts, color=blue_color, ls = '--', lw = 1)
 
   transFigure = fig.transFigure.inverted()
@@ -300,9 +298,11 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
     coord_graph = transFigure.transform(a.transData.transform([0.5, 0.5]))
     coord_fig   = transFigure.transform(ax1.transData.transform([mp, ax1.get_ylim()[1]]))
     
-    llen = np.linalg.norm(coord_graph - coord_fig)
-    lang = np.arctan2(coord_graph - coord_fig)
-    coord_graph = (llen - 1) * np.array([np.cos(lang), np.sin(lang)])
+    l_len = np.linalg.norm(coord_graph - coord_fig)
+    diffs = coord_graph - coord_fig
+    l_ang = np.arctan2(diffs[1], diffs[0])
+    trglen = l_len - 0.09
+    coord_graph = coord_fig + trglen * np.array([np.cos(l_ang), np.sin(l_ang)])
     fig.lines.append(mpl.lines.Line2D(*zip(coord_graph, coord_fig),color=black_color,
                                transform=fig.transFigure, lw=2))
 
