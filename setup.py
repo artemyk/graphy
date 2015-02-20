@@ -7,11 +7,11 @@ import subprocess
 PKG = 'graphy'
 
 def make_louvain():
-    print
-    print "*** Running make on Louvain code..."
+    print()
+    print("*** Running make on Louvain code...")
     subprocess.call('cd external/SurpriseMeCPM ; make', shell=True)
-    print 
-    print
+    print()
+    print()
 
 class install(_install):
     def run(self):
