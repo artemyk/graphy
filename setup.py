@@ -1,19 +1,28 @@
 import os
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext as _build_ext
+from setuptools.command.install   import install   as _install
 import subprocess
 
 PKG = 'graphy'
 
+def make_louvain():
+    print
+    print "*** Running make on Louvain code..."
+    subprocess.call('cd external/SurpriseMeCPM ; make', shell=True)
+    print 
+    print
+
+class install(_install):
+    def run(self):
+      _install.run(self)
+      make_louvain()
+
 # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
 class build_ext(_build_ext):
     def run(self):
-        print
-        print "*** Running make on Louvain code..."
-        subprocess.call('cd external/SurpriseMeCPM ; make', shell=True)
-        print 
-        print
-        _build_ext.run(self)
+      _build_ext.run(self)
+      make_louvain()
 
     def finalize_options(self):
         _build_ext.finalize_options(self)
@@ -75,8 +84,9 @@ setup(name=PKG,
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
       ],
-      cmdclass=dict(build_ext=build_ext),
+      cmdclass=dict(build_ext=build_ext, install=install),
       ext_modules=ext_modules,
       include_package_data=True,
       exclude_package_data={'': ['.gitignore','.travis.yml']},
+      zip_safe=True,
      )
