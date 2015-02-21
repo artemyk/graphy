@@ -36,9 +36,9 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
   G : networkx Graph object or 2-d np.array
       Graph to plot, either instance of networkx Graph or a 2-d connectivity 
       matrix.
-  pos : list of tuples
-      List of (x,y) positions of nodes.  If not specified, nodes
-      are arranged along a circle.
+  pos : dict
+      Dict specifying positions of nodes, as in {node: (x,y).  If not provided, 
+      nodes are arranged along a circle.
   colors : list of ints (default None)
       Color(s) to use for node faces, if desired.
   node_labels : list of strings (default None)
@@ -105,7 +105,8 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
   bbox = plt.gca().get_window_extent() 
   asp_ratio = bbox.width/bbox.height
 
-  xys = np.array([pos[ndx] for ndx in range(len(pos))])
+  node_map = { n:ndx for ndx, n in enumerate(G.nodes())}
+  xys = np.array([pos[n] for n in G.nodes()])
   xys -= xys.min(axis=0)
   xys /= xys.max(axis=0)
   xys[:,0] *= asp_ratio
@@ -129,8 +130,8 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
       arrowdict[k] = v
 
   for edge in G.edges():
-    startxy = xys[edge[0],:].copy()
-    endxy   = xys[edge[1],:].copy()
+    startxy = xys[node_map[edge[0]],:].copy()
+    endxy   = xys[node_map[edge[1]],:].copy()
 
     edgesize = edge_weights.get(edge,1.0)*edgescale
     arrowdict['lw'] = edgesize

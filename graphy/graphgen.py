@@ -101,9 +101,9 @@ def get_hierarchical_net_pos(net):
     .. plot::
         :include-source:
 
-        >>> from graphy import graphgen
-        >>> G = graphgen.gen_hierarchical_net(5, 2)
-        >>> pos = graphgen.get_hierarchical_net_pos(G)
+        >>> import graphy
+        >>> G = graphy.graphgen.gen_hierarchical_net(5, 2)
+        >>> pos = graphy.graphgen.get_hierarchical_net_pos(G)
         >>> graphy.plotting.plot_graph(G, pos=pos)
 
     Parameters
