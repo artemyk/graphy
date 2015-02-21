@@ -79,3 +79,13 @@ def test_plotting_of_gen_graph():
 	G = graphy.graphgen.gen_hierarchical_net(5, 2)
 	pos = graphy.graphgen.get_hierarchical_net_pos(G)
 	graphy.plotting.plot_graph(G, pos=pos)
+
+def test_louvain_randomization():
+	randgraph = (np.random.rand(50,50) > 0.7).astype('int')
+	_, q1 = graphy.louvain.optimize_modularity(randgraph, rand_init=True)
+	_, q2 = graphy.louvain.optimize_modularity(randgraph, rand_init=True)
+	assert(q1!=q2)
+
+	_, q3 = graphy.louvain.optimize_modularity(randgraph, rand_init=False)
+	_, q4 = graphy.louvain.optimize_modularity(randgraph, rand_init=False)
+	assert(q3==q4)
