@@ -12,13 +12,9 @@ import tempfile
 import os
 import scipy.sparse as sp
 
-import scipy.sparse as sp
-
 def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
   """Optimize directed, weighted Newman's modularity
-  using the Louvain algorithm.
-
-  This uses C++ implementation from
+  using the Louvain algorithm. This uses C++ implementation from
   https://github.com/raldecoa/SurpriseMe/tree/master/src/CPM
 
   For example:
@@ -37,7 +33,7 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
   rand_init : bool (default True)
     Whether to randomly shuffle order of nodes (makes results non-deterministic)
   num_runs : int (default 1)
-    How many runs to perform (highest quality run returned).  Only allow if 
+    How many runs to perform (highest quality run returned).  Only allow if
     rand_init is True.
   debug : bool (default False)
     If True, prints various debugging information.
@@ -112,7 +108,7 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
     call_opts.append('-r')
   call_opts.append(OUTPUT_FILE)
   call_opts.append(CONF_FILE)
-    
+
   best_membership, best_q = None, None
   for run_ndx in range(num_runs):
     res = subprocess.Popen(call_opts, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
