@@ -274,11 +274,12 @@ def DrawModularityFigure(mod_ts, optmod_ts=None, data_ts=None, time=None,
   vis_change_points = sorted(vis_change_points)
   num_vis_change_points = float(len(vis_change_points))
 
-  for cp, mp in zip(cplist, mean_cp[1::]):
-    coord3 = transFigure.transform(ax1.transData.transform([cp, ax1.get_ylim()[1]]))
-    coord4 = transFigure.transform(ax2.transData.transform([cp, ax2.get_ylim()[0]]))
-    fig.lines.append(mpl.lines.Line2D((coord3[0],coord4[0]),(coord3[1],coord4[1]),color='gray',
-                               transform=fig.transFigure, lw=changepoint_linewidth))
+  if changepoint_linewidth > 0:
+    for cp, mp in zip(cplist, mean_cp[1::]):
+      coord3 = transFigure.transform(ax1.transData.transform([cp, ax1.get_ylim()[1]]))
+      coord4 = transFigure.transform(ax2.transData.transform([cp, ax2.get_ylim()[0]]))
+      fig.lines.append(mpl.lines.Line2D((coord3[0],coord4[0]),(coord3[1],coord4[1]),color='gray',
+                                 transform=fig.transFigure, lw=changepoint_linewidth))
 
   blankGraph = nx.Graph()
   for i in range(len(change_points.values()[0])):

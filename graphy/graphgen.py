@@ -104,8 +104,7 @@ def get_hierarchical_net_pos(net):
         >>> from graphy import graphgen
         >>> G = graphgen.gen_hierarchical_net(5, 2)
         >>> pos = graphgen.get_hierarchical_net_pos(G)
-        >>> import networkx as nx
-        >>> nx.draw_networkx(G, with_labels=False, node_size=50, pos=pos)
+        >>> graphy.plotting.plot_graph(G, pos=pos)
 
     Parameters
     ----------
