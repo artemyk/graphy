@@ -13,7 +13,7 @@ import os
 
 import scipy.sparse as sp
 
-def optimize_modularity(conn_mx, num_runs=1, debug=False):
+def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
   """Optimize directed, weighted Newman's modularity
   using the Louvain algorithm.
  
@@ -33,8 +33,11 @@ def optimize_modularity(conn_mx, num_runs=1, debug=False):
   ----------
   conn_mx : 2-dimensional np.array or scipy.sparse matrix
     Connectivity matrix.
+  rand_init : bool (default True)
+    Whether to randomly shuffle order of nodes (makes results non-deterministic)
   num_runs : int (default 1)
-    How many runs to perform (highest quality run returned).
+    How many runs to perform (highest quality run returned).  Only allow if 
+    rand_init is True.
   debug : bool (default False)
     If True, prints various debugging information.
 
@@ -50,6 +53,10 @@ def optimize_modularity(conn_mx, num_runs=1, debug=False):
   """
   # TODO: Implement multithreading?  Code seems to support it already
 
+  if num_runs > 1 and not rand_init:
+    raise ValueError('Multiple runs only makes sense when initial order of'
+                     'nodes is randomized')
+    
   is_sparse = sp.isspmatrix(conn_mx)
   if is_sparse:
       # transform to list of lists
