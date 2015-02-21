@@ -13,11 +13,11 @@ import nose
 
 def test_partition_search():
 	#mx = np.array(nx.to_numpy_matrix(nx.karate_club_graph()),dtype='float')
-	
+
 	ground_truth = np.asarray([0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1])
 	mxp = graphy.graphgen.get_weighted_block_matrix(ground_truth,0.7,0.1)
 	mx = graphy.graphgen.sample_connection_matrix(mxp)
-	
+
 	qualityObj = graphy.qualityfuncs.Modularity(mx)
 
 	found_membership = graphy.partitions.find_optimal(qualityObj)
@@ -89,3 +89,14 @@ def test_louvain_randomization():
 	_, q3 = graphy.louvain.optimize_modularity(randgraph, rand_init=False)
 	_, q4 = graphy.louvain.optimize_modularity(randgraph, rand_init=False)
 	assert(q3==q4)
+def test_louvain_sparse():
+    """
+    Test optimize modularity returns same results if passing sparse/dense matrix
+    """
+    from numpy.random import seed
+    A = sp.rand(100, 100, .1, 'lil')
+    Ad = A.todense()
+    m1, q1 = graphy.louvain.optimize_modularity(A, rand_init=False)
+    m2, q2 = graphy.louvain.optimize_modularity(Ad, rand_init=False)
+    assert np.all(m1 == m2), "memberships differ"
+    assert q1 == q2, "modularity differs"
