@@ -11,11 +11,13 @@ import subprocess
 import tempfile
 import os
 
-def optimize_modularity(conn_mx, debug=False):
-  """Optimize directed, weighted Newman's modularity 
+import scipy.sparse as sp
+
+def optimize_modularity(conn_mx, num_runs=1, debug=False):
+  """Optimize directed, weighted Newman's modularity
   using the Louvain algorithm.
-  
-  This uses C++ implementation from 
+ 
+  This uses C++ implementation from
   https://github.com/raldecoa/SurpriseMe/tree/master/src/CPM
 
   For example:
@@ -29,8 +31,10 @@ def optimize_modularity(conn_mx, debug=False):
 
   Parameters
   ----------
-  conn_mx : 2-dimensional np.array
+  conn_mx : 2-dimensional np.array or scipy.sparse matrix
     Connectivity matrix.
+  num_runs : int (default 1)
+    How many runs to perform (highest quality run returned).
   debug : bool (default False)
     If True, prints various debugging information.
 
@@ -40,33 +44,46 @@ def optimize_modularity(conn_mx, debug=False):
     Optimal membership vector indicating community membership of each node.
   float
     Modularity value corresponding to the optimal membership vector. Notice that
-    because the modularity value is computed by adding up increments over 
+    because the modularity value is computed by adding up increments over
     many moves, this may only be accurate to a few decimal places.
 
   """
+  # TODO: Implement multithreading?  Code seems to support it already
 
-  conn_mx = np.asarray(conn_mx)
+  is_sparse = sp.isspmatrix(conn_mx)
+  if is_sparse:
+      # transform to list of lists
+      conn_mx = conn_mx.tolil()
+  else:
+      conn_mx = np.asarray(conn_mx)
 
   if conn_mx.shape[0] != conn_mx.shape[1]:
       raise ValueError('conn mx should be square')
 
   DIR = tempfile.gettempdir()
-  NETWORK_FILE = os.path.join(DIR, 'net.txt')
-  OUTPUT_FILE  = os.path.join(DIR, 'net.bin')
-  NODEMAP_FILE = os.path.join(DIR, 'nmap.bin')
-  CONF_FILE    = os.path.join(DIR, 'conf.bin')
+  pfx = str(os.getpid()) + '_'
+  NETWORK_FILE = os.path.join(DIR, pfx+'net.txt')
+  OUTPUT_FILE  = os.path.join(DIR, pfx+'net.bin')
+  NODEMAP_FILE = os.path.join(DIR, pfx+'nmap.bin')
+  CONF_FILE    = os.path.join(DIR, pfx+'conf.bin')
 
   with open(NETWORK_FILE, 'w') as f:
       f.write('>\n')
       for ndx in range(conn_mx.shape[0]):
           f.write('%d %d\n' % (ndx, ndx))
       f.write('>\n0 0\n>\n')
-      for ndx, r in enumerate(conn_mx):
-          conns = np.flatnonzero(r)
+      for ndx in range(conn_mx.shape[0]):
+          r = conn_mx[ndx,:]
+          if is_sparse:
+            conns, weights = r.rows[0], r.data[0]
+          else:
+            conns = np.flatnonzero(r)
+            weights  = r[conns]
+
           if not len(conns):
               f.write('%d %d %0.5f 0\n' % (ndx, 0, 0))
-          for c in conns:
-              f.write('%d %d %0.5f 0\n' % (ndx, c, r[c]))
+          for c,w in zip(conns, weights):
+              f.write('%d %d %0.5f 0\n' % (ndx, c, w))
 
   if debug:
     print("**** NETWORK FILE: ****")
@@ -75,37 +92,44 @@ def optimize_modularity(conn_mx, debug=False):
     print()
 
   bin_dir = os.path.join(os.path.dirname(__file__),'..','external','SurpriseMeCPM','bin')
-  subprocess.call([os.path.join(bin_dir,'slicer'), 
-                   '-i', NETWORK_FILE, 
-                   '-o', OUTPUT_FILE, 
-                   '-n', NODEMAP_FILE, 
+  subprocess.call([os.path.join(bin_dir,'slicer'),
+                   '-i', NETWORK_FILE,
+                   '-o', OUTPUT_FILE,
+                   '-n', NODEMAP_FILE,
                    '-c', CONF_FILE], stderr=subprocess.PIPE)
-  res = subprocess.Popen([os.path.join(bin_dir,'community'), 
-                          OUTPUT_FILE, 
-                          CONF_FILE],
-                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-  output, errors = map(lambda s: s.decode('ascii'), res.communicate())
+  best_membership, best_q = None, None
+  for run_ndx in range(num_runs):
+    res = subprocess.Popen([os.path.join(bin_dir,'community'), '-r',
+                            OUTPUT_FILE,
+                            CONF_FILE],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-  all_files = [NETWORK_FILE, OUTPUT_FILE, NODEMAP_FILE, CONF_FILE]
-  if debug:
-    print("**** OUTPUT: ****")
-    print(output)
-    print()
-    print("**** STDERR: ****")
-    print(errors)
-    print("*****************")
-    print("Leaving files in place:")
-    print(all_files)
+    output, errors = map(lambda s: s.decode('ascii'), res.communicate())
 
-  else:
+    all_files = [NETWORK_FILE, OUTPUT_FILE, NODEMAP_FILE, CONF_FILE]
+    if debug:
+      print("******* RUN %d *******" % run_ndx)
+      print("**** OUTPUT: ****")
+      print(output)
+      print()
+      print("**** STDERR: ****")
+      print(errors)
+      print("*****************")
+      print("Leaving files in place:")
+      print(all_files)
+
+    q_value = float(errors.strip().split("\n")[-1].split(" ")[0])
+    membership = np.zeros(conn_mx.shape[0], dtype='int')
+    ndxs, vals = zip(*[map(int, l.strip().split("\t")) for l in output.strip().split("\n")])
+    membership[list(ndxs)] = vals
+
+    if best_q is None or q_value > best_q:
+      best_membership, best_q = membership, q_value
+
+  if not debug:
     for fname in all_files:
       os.remove(fname)
 
-  q_value = float(errors.strip().split("\n")[-1].split(" ")[0])
-  membership = np.zeros(conn_mx.shape[0], dtype='int')
-  ndxs, vals = zip(*[map(int, l.strip().split("\t")) for l in output.strip().split("\n")])
-  membership[list(ndxs)] = vals
-
-  return membership, q_value
+  return best_membership, best_q
 

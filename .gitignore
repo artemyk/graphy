@@ -1,0 +1,11 @@
+*.swp
+*.pyc
+*/*.pyc
+*/*.so
+*.o
+external/SurpriseMeCPM/bin/
+.coverage
+graphy.egg-info/
+setuptools_git-1.1-py2.7.egg
+build/
+dist/
