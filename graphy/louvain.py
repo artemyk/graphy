@@ -75,10 +75,11 @@ def optimize_modularity(conn_mx, num_runs=1, debug=False):
       for ndx in range(conn_mx.shape[0]):
           r = conn_mx[ndx,:]
           if is_sparse:
-            conns, weights = r.rows[0], r.data[0]
+            conns = r.rows[0]
+            weights = r.data[0]
           else:
             conns = np.flatnonzero(r)
-            weights  = r[conns]
+            weights = r[conns]
 
           if not len(conns):
               f.write('%d %d %0.5f 0\n' % (ndx, 0, 0))
