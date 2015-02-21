@@ -56,7 +56,7 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
   if num_runs > 1 and not rand_init:
     raise ValueError('Multiple runs only makes sense when initial order of'
                      'nodes is randomized')
-    
+
   is_sparse = sp.isspmatrix(conn_mx)
   if is_sparse:
       # transform to list of lists
@@ -106,12 +106,15 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
                    '-n', NODEMAP_FILE,
                    '-c', CONF_FILE], stderr=subprocess.PIPE)
 
+  call_opts = [os.path.join(bin_dir,'community'),]
+  if rand_init:
+    call_opts.append('-r')
+  call_opts.append(OUTPUT_FILE)
+  call_opts.append(CONF_FILE)
+    
   best_membership, best_q = None, None
   for run_ndx in range(num_runs):
-    res = subprocess.Popen([os.path.join(bin_dir,'community'), '-r',
-                            OUTPUT_FILE,
-                            CONF_FILE],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    res = subprocess.Popen(call_opts, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     output, errors = map(lambda s: s.decode('ascii'), res.communicate())
 
