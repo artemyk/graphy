@@ -11,6 +11,26 @@ import subprocess
 import tempfile
 import os
 import scipy.sparse as sp
+from itertools import izip
+
+
+def _edge_lines_iter(conn_mx, is_sparse):
+    """
+    Iterate over Pajek edge lines
+    """
+    for ndx in range(conn_mx.shape[0]):
+        r = conn_mx[ndx,:]
+        if is_sparse:
+            conns = r.rows[0]
+            weights = r.data[0]
+        else:
+            conns = np.flatnonzero(r)
+            weights = r[conns]
+        if not len(conns):
+            yield ('%d %d %0.5f 0\n' % (ndx, 0, 0))
+        for c, w in izip(conns, weights):
+            yield ('%d %d %0.5f 0\n' % (ndx, c, w))
+
 
 def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
   """Optimize directed, weighted Newman's modularity
@@ -73,23 +93,12 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
 
   with open(NETWORK_FILE, 'w') as f:
       f.write('>\n')
-      for ndx in range(conn_mx.shape[0]):
-          f.write('%d %d\n' % (ndx, ndx))
+      N_nodes = conn_mx.shape[0]
+      node_lines = ('%d %d\n' % (ndx, ndx) for ndx in range(N_nodes))
+      f.writelines(node_lines)
       f.write('>\n0 0\n>\n')
-      for ndx in range(conn_mx.shape[0]):
-          r = conn_mx[ndx,:]
-          if is_sparse:
-            conns = r.rows[0]
-            weights = r.data[0]
-          else:
-            conns = np.flatnonzero(r)
-            weights = r[conns]
-
-          if not len(conns):
-              f.write('%d %d %0.5f 0\n' % (ndx, 0, 0))
-          for c,w in zip(conns, weights):
-              f.write('%d %d %0.5f 0\n' % (ndx, c, w))
-
+      edges_lines = _edge_lines_iter(conn_mx, is_sparse)
+      f.writelines(edges_lines)
   if debug:
     print("**** NETWORK FILE: ****")
     with open(NETWORK_FILE) as f:
