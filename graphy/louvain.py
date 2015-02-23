@@ -5,13 +5,13 @@ Module for running Louvain community detection algorithm.
 from __future__ import division, print_function, absolute_import
 import six
 range = six.moves.range
+zip = six.moves.zip
 
 import numpy as np
 import subprocess
 import tempfile
 import os
 import scipy.sparse as sp
-from itertools import izip
 from contextlib import closing
 
 
@@ -26,7 +26,7 @@ def _edge_lines_iter(conn_mx, is_sparse):
             if not len(conns):
                 yield ('%d %d %0.5f 0\n' % (ndx, 0, 0))
             else:
-                for c, w in izip(conns, weights):
+                for c, w in zip(conns, weights):
                     yield ('%d %d %0.5f 0\n' % (ndx, c, w))
     else:
         for ndx in range(conn_mx.shape[0]):
@@ -36,7 +36,7 @@ def _edge_lines_iter(conn_mx, is_sparse):
             if not len(conns):
                 yield ('%d %d %0.5f 0\n' % (ndx, 0, 0))
             else:
-                for c, w in izip(conns, weights):
+                for c, w in zip(conns, weights):
                     yield ('%d %d %0.5f 0\n' % (ndx, c, w))
 
 
