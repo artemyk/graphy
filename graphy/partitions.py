@@ -215,7 +215,6 @@ def find_optimal(quality_func_obj, initial_membership=None, num_runs=1, debug_le
             print("*** Run %d ***" % i)
 
         old_quality, cur_quality = None, None
-
         while old_quality is None or cur_quality >= (old_quality + 1e-5):
             old_quality = cur_quality
             membership, cur_quality = greedy_moves(membership, mover_class=CommMerger)
@@ -227,7 +226,7 @@ def find_optimal(quality_func_obj, initial_membership=None, num_runs=1, debug_le
             best_membership = membership
             best_quality = cur_quality
             
-    return membership
+    return best_membership
 
 
 def get_minsize_assignment(N, min_comm_size):
