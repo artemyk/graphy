@@ -15,6 +15,7 @@ range = six.moves.range
 import networkx as nx
 import numpy as np
 import itertools
+import scipy
 
 def gen_ring_matrix(N, neighs_per_side=1):
     """Generate a ring-lattice matrix.
@@ -41,15 +42,79 @@ def gen_ring_matrix(N, neighs_per_side=1):
     np.array matrix
         The connectivity matrix
         
-    """    
-    mx = np.zeros(shape=(N,N))
-    neigh_ndxs = 1+np.arange(neighs_per_side,dtype='int')
-    for i in range(N):
-        mx[(i-neigh_ndxs)%N,i] = 1.0
-        mx[i,(i-neigh_ndxs)%N] = 1.0
-        mx[(i+neigh_ndxs)%N,i] = 1.0
-        mx[i,(i+neigh_ndxs)%N] = 1.0
-    return mx
+    """
+
+    if (2*neighs_per_side + 1) > N:
+        raise ValueError('For a ring of size %d, neighs_per_side can ' 
+            'have maximum value of %d' % (N, int((N-1)/2)))
+
+    v = np.zeros(N)
+    v[1:(neighs_per_side+1)] = 1
+    v[-(neighs_per_side):] = 1
+    return scipy.linalg.toeplitz(v)
+
+
+def get_clique_of_rings_net_and_pos(sizes, neighs_per_side=1, ring_weight=1.0, clique_weight=1.0):
+    """Generate several ring-lattice graphs of different sizes.  Then 
+    choose a single node from each ring and interconnect those into 
+    a clique.
+
+    .. plot::
+      :include-source:
+
+      >>> import graphy
+      >>> net, pos = graphy.graphgen.get_clique_of_rings_net_and_pos([5, 10, 20])
+      >>> graphy.plotting.plot_graph(net, pos=pos) # doctest: +SKIP    
+
+
+    Parameters
+    ----------
+    sizes : list of int
+        How many nodes in each ring.
+    neighs_per_side : int (default 1)
+        For nodes in ring lattices, how many neighbors on each side to connect to.
+    ring_weight : float (default 1.0)
+        Strength of connections in each ring lattice.
+    clique_weight : float (default 1.0)
+        Strength of connections in clique connecting single nodes in each ring.
+
+    Returns
+    -------
+    networkx graph
+        The clique of rings network
+    dict
+        { node : xyposition } dictionary of positions for good node layout
+
+    """
+
+    mx = np.zeros((sum(sizes),sum(sizes)))
+    offset=0
+    N = sum(sizes)
+    pos = {}
+    interconnect_nodes = []
+
+    groundtruth = np.hstack([np.ones(s,dtype='int')*ndx for ndx, s in enumerate(sizes)])
+    for ndx, s in enumerate(sizes):
+        centerrad = 2 * np.pi * np.sum(np.sqrt(sizes[:ndx])) / np.sum(np.sqrt(sizes))
+        base_pos = np.sqrt(N*1)*np.array([np.cos(centerrad),np.sin(centerrad)])
+        rads = 2 * np.pi * np.linspace(0, 1, s, endpoint=False)
+        radius = np.sqrt(s)
+        nodepos = base_pos + radius * np.vstack([np.cos(rads), np.sin(rads)]).T
+
+        interconnect_nodes.append(offset+np.argsort(np.linalg.norm(nodepos, axis=1))[0])
+        
+        for i in range(s):
+            pos[offset+i] = nodepos[i]
+
+        mx[offset:offset+s,offset:offset+s] = ring_weight * gen_ring_matrix(s, neighs_per_side)
+        offset+=s
+
+    for i in interconnect_nodes:
+        mx[i,interconnect_nodes] = clique_weight
+
+    np.fill_diagonal(mx, 0)
+
+    return nx.from_numpy_matrix(mx), pos
 
 
 def gen_hierarchical_net(n, level):
@@ -131,6 +196,7 @@ def get_hierarchical_net_pos(net):
         pos[node] = (x,y)
 
     return pos
+
 
 
 def sample_connection_matrix(prob_mx):
