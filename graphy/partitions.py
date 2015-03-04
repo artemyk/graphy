@@ -10,7 +10,6 @@ import numpy as np
 import networkx as nx
 import matplotlib.pylab as plt
 import copy
-import igraph
 
 def to_str(membership):
     """Convert membership array to pretty string.
@@ -171,6 +170,7 @@ def remap2match(partition1, partition2):
 
 
 def find_optimal_across_time(qualityObj, timepoints, num_runs=1):
+    import igraph
 
     saved_best = []
     best_membership = None

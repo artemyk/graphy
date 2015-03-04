@@ -57,6 +57,7 @@ required_packages = [
     'scipy>=0.13',
     'six>=1.8.0',
     'networkx',
+    'igraph',
 ]
 tests_require = [
     'coverage>=3.7.0',
