@@ -8,8 +8,6 @@ range = six.moves.range
 import numpy as np
 import scipy
 
-import random
-
 from . import partitions
 
 
@@ -59,163 +57,11 @@ class QualityFunction(object):
         Q value corresponding to optimal membership
 
     """
+    return partitions.greedy_search(self.quality, self.N, 
+      initial_membership=initial_membership,
+      num_runs=num_runs,
+      debug_level=debug_level)
 
-    class CommMerger(object):
-        @staticmethod
-        def get_elements(membership):
-            return list(set(membership))
-
-        @staticmethod
-        def prop_memberships(el, membership):
-            for diff_comm in list(set(membership)):
-                if el == diff_comm:
-                    continue
-
-                prop_membership = membership.copy()
-                prop_membership[prop_membership == el] = diff_comm 
-
-                yield prop_membership
-
-    class CommSpliter(CommMerger):
-        @staticmethod
-        def prop_memberships(el, membership):
-            c_nodes = np.flatnonzero(membership == el)
-            if len(c_nodes) <= 1:
-                return
-
-            about_half = (len(c_nodes)+1)/2
-            new_comm = max(membership)+1
-            for _ in range(10):
-                random.shuffle(c_nodes)
-                prop_membership = membership.copy()
-                prop_membership[c_nodes[:about_half]] = new_comm
-                yield prop_membership
-
-    class NodeMover(object):
-        @staticmethod
-        def get_elements(membership):
-            return list(range(len(membership)))
-
-        @staticmethod
-        def prop_memberships(el, membership):
-            for diff_comm in list(set(membership)):
-                if membership[el] == diff_comm:
-                    continue
-
-                prop_membership = membership.copy()
-                prop_membership[el] = diff_comm 
-
-                yield prop_membership
-
-    class NodeSwapper(NodeMover):
-        @staticmethod
-        def prop_memberships(el, membership):
-            for diff_el_ndx in range(len(membership)):
-                if membership[el] == membership[diff_el_ndx]:
-                    continue
-
-                prop_membership = membership.copy()
-                prop_membership[el], prop_membership[diff_el_ndx] = prop_membership[diff_el_ndx], prop_membership[el] 
-
-                yield prop_membership
-
-    _done = set()
-    def get_quality(membership):
-        _done.add(tuple(membership.tolist()))
-        return self.quality(membership)
-
-    def greedy_moves(membership, mover_class):
-
-        if debug_level >= 1:
-            classname = mover_class.__name__.ljust(15)
-
-        old_quality = None
-        cur_quality = get_quality(membership)
-
-        iter_num = 0   
-        while old_quality is None or cur_quality > (old_quality + 1e-5):
-            old_quality = cur_quality
-            elements = mover_class.get_elements(membership)
-            random.shuffle(elements)
-
-            for v in elements:
-
-                all_proposed = [m for m in mover_class.prop_memberships(v, membership) if tuple(m.tolist()) not in _done]
-
-                if not len(all_proposed):
-                    continue
-
-                random.shuffle(all_proposed)
-
-                #memb_qualities = []
-                best_move_quality, best_move_membership = cur_quality, None
-                for c in all_proposed:
-                    q = get_quality(c)
-                    if debug_level >= 4:
-                        print(classname, 
-                              "Trying: %s -> %s [q=%0.3f vs. old q=%0.3f]"
-                              % (partitions.to_str(membership), partitions.to_str(c), q, cur_quality)
-                             )
-                    #memb_qualities.append((c, q))
-                    if q >= best_move_quality:
-                        best_move_quality = q
-                        best_move_membership = c
-
-                #best_move_membership, best_move_quality = sorted(memb_qualities, reverse=True, key=lambda x: x[1])[0] 
-
-                if best_move_quality > cur_quality: 
-                    cur_quality = best_move_quality
-                    if debug_level >= 3:
-                        print(classname, 
-                              "Accepted move: %s -> %s [q=%0.3f]"
-                              % (partitions.to_str(membership), partitions.to_str(best_move_membership), best_move_quality)
-                             )
-
-                    membership = best_move_membership
-
-            membership = partitions.renumber_membership(membership)
-
-            if debug_level >= 2:
-                print(classname, 
-                      "Iteration %d, #=%d quality=%5.3f (improvement=%5.3f), m=%s" %
-                      (iter_num, len(set(membership)), cur_quality, cur_quality - old_quality, partitions.to_str(membership))
-                     )
-                
-        return membership, cur_quality
-    
-    # ***************************************************
-    # Main function body
-    # ***************************************************
-
-    best_membership, best_quality = None, None
-    for i in range(num_runs):
-
-        if initial_membership is None:
-            membership = np.arange(self.N, dtype='int')
-        else:
-            if len(initial_membership) != self.N:
-                raise ValueError(
-                  'Length of initial_membership (%d) is different from expected (%d)' % 
-                  (len(initial_membership), self.N) )
-            membership = initial_membership.copy()
-
-        if debug_level >= 1:
-            print("*** Run %d ***" % i)
-
-        old_quality, cur_quality = None, None
-        while old_quality is None or cur_quality >= (old_quality + 1e-5):
-            old_quality = cur_quality
-            membership, cur_quality = greedy_moves(membership, mover_class=NodeMover)
-            #membership, cur_quality = greedy_moves(membership, mover_class=NodeSwapper)
-            membership, cur_quality = greedy_moves(membership, mover_class=CommMerger)
-            membership, cur_quality = greedy_moves(membership, mover_class=NodeMover)
-            membership, cur_quality = greedy_moves(membership, mover_class=CommSpliter)
-            
-        if best_quality is None or best_quality < cur_quality:
-            best_membership = membership
-            best_quality = cur_quality
-            
-    return best_membership, best_quality
     
 class Modularity(QualityFunction):
   def __init__(self, mx):
@@ -306,6 +152,7 @@ class InfoMapCodeLength(QualityFunction):
 
   def quality(self, membership, extrainfo=False):
     comms = set(membership)
+    K = len(comms)
     exit_probs = []
     total_code_len = 0.0
     for c in comms:
@@ -323,8 +170,9 @@ class InfoMapCodeLength(QualityFunction):
       comm_code_len   = (comm_p + comm_exit_prob) * self.normed_entropy(plist)
       total_code_len += comm_code_len
       exit_probs.append(comm_exit_prob)
-        
-    total_code_len += sum(exit_probs) * self.normed_entropy(np.array(exit_probs))
+    
+    if K > 1:
+      total_code_len += sum(exit_probs) * self.normed_entropy(np.array(exit_probs))
 
     # Return negative because we want to minimize, not maximize
     return -total_code_len
