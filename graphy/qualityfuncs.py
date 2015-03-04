@@ -14,9 +14,8 @@ from . import partitions
 
 
 class QualityFunction(object):
-  # TODO: Document that should implement N attribute
   def __init__(self):
-    """Implements a quality function.
+    """Base class for implementing a quality function.
     """
     # precompute quantities here
     pass
@@ -287,7 +286,7 @@ class InfoMapCodeLength(QualityFunction):
     
     if teleportation_prob > 0:
       teleportation_trans = np.ones(mx.shape)
-      np.fill_diagonal(teleportation_trans, 0)
+      # np.fill_diagonal(teleportation_trans, 0)  
       teleportation_trans /= teleportation_trans.sum(axis=0)[None,:]
       
       self.trans = (1-teleportation_prob)*self.trans + teleportation_prob*teleportation_trans
