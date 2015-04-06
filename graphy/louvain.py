@@ -10,6 +10,7 @@ zip = six.moves.zip
 import numpy as np
 import subprocess
 import tempfile
+import threading
 import os
 import scipy.sparse as sp
 from contextlib import closing
@@ -102,7 +103,8 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
 
     # create files
     DIR = tempfile.gettempdir()
-    pfx = str(os.getpid()) + '_'
+    pfx = '%d_%d_' % (os.getpid(), hash(threading.current_thread().name))
+    
     NETWORK_FILE = os.path.join(DIR, pfx+'net.txt')
     OUTPUT_FILE = os.path.join(DIR, pfx+'net.bin')
     NODEMAP_FILE = os.path.join(DIR, pfx+'nmap.bin')
