@@ -119,7 +119,7 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
         edges_lines = _edge_lines_iter(conn_mx, is_sparse)
         f.writelines(edges_lines)
 
-    bin_dir = os.path.join(os.path.dirname(__file__), '..', 'external',
+    bin_dir = os.path.join(os.path.dirname(__file__), 'external',
                            'SurpriseMeCPM', 'bin')
     subprocess.call([os.path.join(bin_dir, 'slicer'),
                      '-i', NETWORK_FILE,

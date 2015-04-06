@@ -9,7 +9,7 @@ PKG = 'graphy'
 def make_louvain():
     print()
     print("*** Running make on Louvain code...")
-    subprocess.call('cd external/SurpriseMeCPM ; make', shell=True)
+    subprocess.call('cd graphy/external/SurpriseMeCPM ; make', shell=True)
     print()
     print()
 
