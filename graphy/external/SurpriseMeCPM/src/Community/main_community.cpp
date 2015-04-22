@@ -79,6 +79,7 @@ int k1                = 16;
 int stochastic        = 0;
 int only_output_mod   = 0;
 int nb_threads        = 1;
+int random_seed       = -1;
 
 int* conf = NULL;
 int* sign = NULL;
@@ -105,6 +106,7 @@ Options:\n\
 -b <nb_pass>      - maximum number of passes for one level.\n\
 -i                - do individual moves between hierarchical steps.\n\
 -r                - use randomized node order.\n\
+-s <seed>         - random seed to use.\n\
 -m                - only output modularity.\n\
 -h                - show this usage message.\n\
 -t <#threads>     - indicate the number of threads to use (currently not supported).\n";
@@ -206,6 +208,12 @@ parse_args(int argc, char **argv) {
         if (i==argc-1)
           usage(argv[0], "Number of threads missing\n");
         nb_threads = atoi(argv[i+1]);
+        i++;
+        break;
+      case 's':
+        if (i==argc-1)
+          usage(argv[0], "Random seed missing\n");
+        random_seed = atoi(argv[i+1]);
         i++;
         break;
       case 'p':
@@ -360,6 +368,11 @@ int main(int argc, char **argv)
   GreedyLouvain::iterate_randomly = stochastic;
   GreedyLouvain::move_individual  = move_individual;
   GreedyLouvain::max_nb_threads   = nb_threads;
+
+  GreedyLouvain::random_seed      = random_seed;
+
+  if (random_seed != -1)
+    cerr << "Using random seed " << random_seed << "." << endl;
 
   if (nb_threads > 1)
     cerr << "Using multithreading with at most " << nb_threads << " threads." << endl;

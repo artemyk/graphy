@@ -48,6 +48,8 @@ double          GreedyLouvain::min_prop_changes               = 10e-4;
 int             GreedyLouvain::iterate_randomly               = 0;
 int             GreedyLouvain::move_individual                = 0;
 int             GreedyLouvain::max_nb_threads                 = 1;
+int             GreedyLouvain::random_seed                    = -1;
+
 #ifdef THREAD_SUPPORT
 pthread_mutex_t GreedyLouvain::rand_lock                      = PTHREAD_MUTEX_INITIALIZER;
 #endif
@@ -196,7 +198,12 @@ double GreedyLouvain::one_level_single(Community* cc, ThreadSync* ts)
   //cerr << "MTRand initialized with seed " << s << endl;
   pthread_mutex_unlock(&rand_lock);
 #else
-  MTRand* r = new MTRand();
+  MTRand* r;
+  if (random_seed != -1) {
+    r = new MTRand(random_seed);
+  } else {
+    r = new MTRand();
+  }
 #endif  
 
   int nb_pass_done      = 0;

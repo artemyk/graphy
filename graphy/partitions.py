@@ -379,11 +379,10 @@ def find_optimal_across_time(qualityObj, timepoints, num_runs=1, debug_level=0):
                 best_membership = last_best_membership
             else:
                 best_membership = renumber_membership(best_membership)
-            vi  = igraph.compare_communities(best_membership, last_best_membership, method='vi')
             nmi = igraph.compare_communities(best_membership, last_best_membership, method='nmi')
 
         if debug_level > 0:
-            print('t=%2d vi=%0.4f nmi=%0.4f #=%2d q=%0.4f %s' % (t, vi, nmi, len(set(best_membership)), best_membership_q, to_alphanum_str(best_membership)))
+            print('t=%2d nmi=%0.4f #=%2d q=%0.4f %s' % (t, nmi, len(set(best_membership)), best_membership_q, to_alphanum_str(best_membership)))
 
         saved_best.append( (t, best_membership, copy.deepcopy(qualityObj)) )
         last_best_membership, last_best_membership_q = best_membership, best_membership_q

@@ -84,6 +84,9 @@ class GreedyLouvain
   // Maximum number of threads to use
   static int max_nb_threads;
 
+  // Random seed
+  static int random_seed;
+  
 private:
 
   //////////////////////////////////////////////////////////////////////////////

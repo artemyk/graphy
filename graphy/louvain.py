@@ -15,6 +15,7 @@ import os
 import scipy.sparse as sp
 from contextlib import closing
 
+from . import qualityfuncs
 
 def _edge_lines_iter(conn_mx, is_sparse):
     """
@@ -41,7 +42,7 @@ def _edge_lines_iter(conn_mx, is_sparse):
                     yield ('%d %d %0.5f 0\n' % (ndx, c, w))
 
 
-def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
+def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False, errortol=1e-2):
     """
     Optimize directed, weighted Newman's modularity
     using the Louvain algorithm. This uses C++ implementation from
@@ -89,6 +90,8 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
         raise ValueError('Multiple runs only makes sense when initial order of'
                          'nodes is randomized')
 
+    qObj = qualityfuncs.DirectedModularity(conn_mx)
+
     # check is sparse or not
     is_sparse = sp.isspmatrix(conn_mx)
     if is_sparse:
@@ -135,7 +138,8 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
 
     best_membership, best_q = None, None
     for run_ndx in range(num_runs):
-        res = subprocess.Popen(call_opts, stdout=subprocess.PIPE,
+        rand_seed_opt = [] # ['-s', str(1+run_ndx)]
+        res = subprocess.Popen(call_opts + rand_seed_opt, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
 
         output, errors = map(lambda s: s.decode('ascii'), res.communicate())
@@ -152,14 +156,21 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False):
             print("Leaving files in place:")
             print(all_files)
 
-    q_value = float(errors.strip().split("\n")[-1].split(" ")[0])
-    membership = np.zeros(conn_mx.shape[0], dtype='int')
-    ndxs, vals = zip(*[map(int, l.strip().split("\t"))
-                       for l in output.strip().split("\n")])
-    membership[list(ndxs)] = vals
+        returned_q = float(errors.strip().split("\n")[-1].split(" ")[0])
+        
+        membership = np.zeros(conn_mx.shape[0], dtype='int')
+        ndxs, vals = zip(*[map(int, l.strip().split("\t"))
+                           for l in output.strip().split("\n")])
+        membership[list(ndxs)] = vals
 
-    if best_q is None or q_value > best_q:
-        best_membership, best_q = membership, q_value
+        accurate_q = qObj.quality(membership)
+        if (np.abs(returned_q - accurate_q) > errortol):
+            raise Exception('Quality returned by Louvain (%0.5f) does not match explicitly computed quality (%0.5f)' % 
+                (returned_q, accurate_q))
+
+
+        if best_q is None or accurate_q > best_q:
+            best_membership, best_q = membership, accurate_q
 
     if not debug:
         for fname in all_files:
