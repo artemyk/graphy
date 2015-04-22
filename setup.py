@@ -58,6 +58,7 @@ required_packages = [
     'six>=1.8.0',
     'networkx',
     'python-igraph',
+    'setuptools>=10.0.0',
 ]
 tests_require = [
     'coverage>=3.7.0',
