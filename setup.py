@@ -15,14 +15,14 @@ def make_louvain():
 
 class install(_install):
     def run(self):
-      _install.run(self)
       make_louvain()
+      _install.run(self)
 
 # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
 class build_ext(_build_ext):
     def run(self):
-      _build_ext.run(self)
       make_louvain()
+      _build_ext.run(self)
 
     def finalize_options(self):
         _build_ext.finalize_options(self)
@@ -58,7 +58,6 @@ required_packages = [
     'six>=1.8.0',
     'networkx',
     'python-igraph',
-    'setuptools>=10.0.0',
 ]
 tests_require = [
     'coverage>=3.7.0',
