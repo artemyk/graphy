@@ -1,1 +1,2 @@
 exclude .travis.yml
+recursive-include graphy/external/SurpriseMeCPM/bin *
