@@ -90,8 +90,6 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False, errort
         raise ValueError('Multiple runs only makes sense when initial order of'
                          'nodes is randomized')
 
-    qObj = qualityfuncs.DirectedModularity(conn_mx)
-
     # check is sparse or not
     is_sparse = sp.isspmatrix(conn_mx)
     if is_sparse:
@@ -104,6 +102,8 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False, errort
     if conn_mx.shape[0] != conn_mx.shape[1]:
         raise ValueError('conn mx should be square')
 
+    qObj = qualityfuncs.DirectedModularity(conn_mx)
+    
     # create files
     DIR = tempfile.gettempdir()
     pfx = '%d_%d_' % (os.getpid(), hash(threading.current_thread().name))

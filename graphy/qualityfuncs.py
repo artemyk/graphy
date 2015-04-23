@@ -7,6 +7,7 @@ range = six.moves.range
 
 import numpy as np
 import scipy
+import scipy.sparse as sp
 
 from . import partitions
 
@@ -73,7 +74,8 @@ class Modularity(QualityFunction):
       Connectivity matrix of graph to partition into communities.
 
     """
-    self.mx = np.asarray(mx).astype('float')
+    mx = mx if sp.isspmatrix(mx) else np.asarray(mx)
+    self.mx = mx.astype('float')
     self.ks = self.mx.sum(axis=1)
     self.total_stubs = self.ks.sum()
     self.N = mx.shape[0]
@@ -99,8 +101,8 @@ class DirectedModularity(Modularity):
 
     """
     super(DirectedModularity, self).__init__(mx)
-    self.k_in  = self.mx.sum(axis=0)
-    self.k_out = self.mx.sum(axis=1)
+    self.k_in  = self.mx.sum(axis=0).flat
+    self.k_out = self.mx.sum(axis=1).flat
 
   def quality(self, membership):
     q = 0.0

@@ -96,5 +96,5 @@ def test_louvain_sparse():
     Ad = A.todense()
     m1, q1 = graphy.louvain.optimize_modularity(A, rand_init=False)
     m2, q2 = graphy.louvain.optimize_modularity(Ad, rand_init=False)
-    assert np.all(m1 == m2), "memberships differ"
-    assert q1 == q2, "modularity differs"
+    assert np.allclose(m1, m2), "memberships differ"
+    assert np.isclose(q1, q2), "modularity differs"
