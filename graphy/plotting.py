@@ -108,7 +108,9 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
   node_map = { n:ndx for ndx, n in enumerate(G.nodes())}
   xys = np.array([pos[n] for n in G.nodes()])
   xys -= xys.min(axis=0)
-  xys /= xys.max(axis=0)
+  maxvalues = xys.max(axis=0)
+  maxvalues[maxvalues == 0] = 1
+  xys /= maxvalues
   xys[:,0] *= asp_ratio
   
   plt.xlim([-(3*node_size)*asp_ratio,(1+(3*node_size))*asp_ratio])
@@ -129,6 +131,7 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
   for k, v in arrowopts.items():
       arrowdict[k] = v
 
+  done_edges = []
   for edge in G.edges():
     startxy = xys[node_map[edge[0]],:].copy()
     endxy   = xys[node_map[edge[1]],:].copy()
@@ -154,8 +157,8 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
         startxy += offset
         endxy   -= offset            
         
-        if not nx.is_directed(G) or G.has_edge(edge[1], edge[0]):
-            if edge[0] > edge[1]: # will be drawn in the other direction
+        if not nx.is_directed(G) or (edge[1], edge[0]) in done_edges:
+            if (edge[1], edge[0]) in done_edges: # will be drawn in the other direction
                 continue
             else:
                 midxy = (startxy + endxy) / 2.0
@@ -166,6 +169,8 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
         else:
             plt.arrow(startxy[0], startxy[1], 
                       endxy[0]-startxy[0], endxy[1]-startxy[1], **arrowdict)
+
+    done_edges.append((edge[0], edge[1]))
         
 
   for ndx, xy in enumerate(xys):  # Plot nodes
