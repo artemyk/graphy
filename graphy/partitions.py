@@ -164,7 +164,7 @@ def remap2match(partition1, partition2):
                     saved_pair = (c1, c2)
         old_c, new_c = saved_pair
         if max_overlap == 0:
-            new_c = max(nmap.values() + [0,]) + 1
+            new_c = max(list(nmap.values()) + [0,]) + 1
         nmap[old_c] = new_c
         to_remap        = to_remap        - set([old_c,])
         allowed_matches = allowed_matches - set([new_c,])

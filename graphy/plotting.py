@@ -15,7 +15,9 @@ from scipy.spatial.distance import cdist
 
 
 def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04, 
-  edgescale=1.0, nodeopts={}, labelopts={}, arrowopts={}, cmap='Paired'):
+  edgescale=1.0, nodeopts={}, labelopts={}, arrowopts={}, bidir_arrows=True,
+  cmap='Paired',
+  ):
   """Plot a graphs.  Supports both directed and undirected graphs.
   Undirected edges are drawn as lines while directed edges are drawn
   as arrows.
@@ -54,6 +56,9 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
       Could be used to specify fontsize, for example.
   arrowopts : dict (default {})
       Extra options to pass into plt.arrow call for plotting edges.
+  bidir_arrows : bool (default True)
+      Whether to draw arrowheads when graph is directed and two 
+      nodes are connected bidirectionally.
   cmap : string (default 'Paired')
       Name of colormap to use.
   """
@@ -122,27 +127,31 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
   except KeyError:
     edge_weights = {}
       
-  headscale = node_size*0.5 if G.is_directed() else 0
   arrowdict = dict(ec='k', fc='k', 
       length_includes_head=True, 
-      shape='full',
-      head_length=headscale,
-      head_width =headscale)
+      shape='full')
   for k, v in arrowopts.items():
       arrowdict[k] = v
 
-  done_edges = []
   for edge in G.edges():
     startxy = xys[node_map[edge[0]],:].copy()
     endxy   = xys[node_map[edge[1]],:].copy()
 
-    edgesize = edge_weights.get(edge,1.0)*edgescale
-    arrowdict['lw'] = edgesize
+    arrowdict['lw'] = edge_weights.get(edge,1.0)*edgescale
+
+    headscale = node_size*0.5 
+    has_reverse = (edge[1], edge[0]) in G.edges()
+    if G.is_directed() and (not has_reverse or bidir_arrows):
+      head_scale = node_size*0.5
+    else:
+      head_scale = 0
+    arrowdict['head_length'] = head_scale
+    arrowdict['head_width']  = head_scale
 
     if edge[0] == edge[1]:
         loopoffset = np.sign(startxy - xys.mean(axis=0)) * node_size * 1.05
         cloop = plt.Circle(startxy+loopoffset, radius=node_size*0.65, 
-                           ec='k', fill=False, lw=edgesize)
+                           ec='k', fill=False, lw=arrowdict['lw'])
         plt.gca().add_artist(cloop)
         arrowloc = intersect_two_circles(startxy, node_size, 
                                          startxy+loopoffset, node_size*0.7)
@@ -157,20 +166,19 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
         startxy += offset
         endxy   -= offset            
         
-        if not nx.is_directed(G) or (edge[1], edge[0]) in done_edges:
-            if (edge[1], edge[0]) in done_edges: # will be drawn in the other direction
-                continue
-            else:
-                midxy = (startxy + endxy) / 2.0
-                plt.arrow(midxy[0], midxy[1], 
-                          endxy[0]-midxy[0], endxy[1]-midxy[1], **arrowdict)
-                plt.arrow(midxy[0], midxy[1], 
-                          startxy[0]-midxy[0], startxy[1]-midxy[1], **arrowdict)
+        if nx.is_directed(G) and has_reverse:
+            midxy = (startxy + endxy) / 2.0
+            plt.arrow(midxy[0], midxy[1], 
+                      endxy[0]-midxy[0], endxy[1]-midxy[1], **arrowdict)
+            plt.arrow(midxy[0], midxy[1], 
+                      startxy[0]-midxy[0], startxy[1]-midxy[1], **arrowdict)
         else:
+            carrowdict = arrowdict
+            carrowdict = carrowdict.copy()
+
             plt.arrow(startxy[0], startxy[1], 
                       endxy[0]-startxy[0], endxy[1]-startxy[1], **arrowdict)
 
-    done_edges.append((edge[0], edge[1]))
         
 
   for ndx, xy in enumerate(xys):  # Plot nodes
