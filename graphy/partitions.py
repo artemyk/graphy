@@ -9,7 +9,6 @@ range = six.moves.range
 import numpy as np
 import networkx as nx
 import matplotlib.pylab as plt
-import copy
 import random
 
 
@@ -351,43 +350,4 @@ def greedy_search(qualityfunc, N, initial_membership=None, num_runs=1, debug_lev
             best_quality = cur_quality
             
     return best_membership, best_quality
-
-
-
-def find_optimal_across_time(qualityObj, timepoints, num_runs=1, debug_level=0):
-    import igraph
-
-    saved_best = []
-    best_membership = None
-    last_time = 0
-    last_best_membership = None
-    last_best_membership_q = 0
-    for t in sorted(timepoints):
-        qualityObj.end_state_advance(t - last_time)
-        last_time = t
-
-        #remap_target = groundtruth if groundtruth is not None else best_membership
-
-        # Run search
-        best_membership, best_membership_q = qualityObj.find_optimal(debug_level=0, 
-            initial_membership=last_best_membership,
-            num_runs=num_runs)
-
-        vi = 0.0
-        nmi = 0.0
-
-        if last_best_membership is not None:
-            if np.abs(last_best_membership_q - best_membership_q) < 1e-4:
-                best_membership = last_best_membership
-            else:
-                best_membership = renumber_membership(best_membership)
-            nmi = igraph.compare_communities(best_membership, last_best_membership, method='nmi')
-
-        if debug_level > 0:
-            print('t=%2d nmi=%0.4f #=%2d q=%0.4f %s' % (t, nmi, len(set(best_membership)), best_membership_q, to_alphanum_str(best_membership)))
-
-        saved_best.append( (t, best_membership, copy.deepcopy(qualityObj)) )
-        last_best_membership, last_best_membership_q = best_membership, best_membership_q
-
-    return saved_best
 
