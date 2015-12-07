@@ -81,11 +81,15 @@ class Modularity(QualityFunction):
     self.N = mx.shape[0]
 
   def quality(self, membership):
+    if len(membership) != self.N:
+        raise ValueError('Membership should be array of length %d, not %d' % 
+                         (self.N, len(membership)))
+
     q = 0
     for comm in set(membership):
         ixs = membership == comm
-        q += self.mx[ixs,:][:,ixs].sum() - np.outer(self.ks[ixs], self.ks[ixs]/self.total_stubs).sum()
-    return q
+        q += (self.mx[ixs,:][:,ixs].sum() - self.ks[ixs].sum()**2/self.total_stubs)
+    return q / self.total_stubs
 
 class DirectedModularity(Modularity):
   def __init__(self, mx):
@@ -108,8 +112,8 @@ class DirectedModularity(Modularity):
     q = 0.0
     for comm in set(membership):
         ndxs = membership == comm
-        q += (self.mx[ndxs,:][:,ndxs].sum() - np.outer(self.k_in[ndxs], self.k_out[ndxs]).sum() / self.total_stubs) / self.total_stubs
-    return q
+        q += (self.mx[ndxs,:][:,ndxs].sum() - (self.k_in[ndxs].sum()*self.k_out[ndxs].sum()) / self.total_stubs)
+    return q  / self.total_stubs
 
 
 class InfoMapCodeLength(QualityFunction):

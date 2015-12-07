@@ -87,9 +87,10 @@ def test_louvain_randomization():
     _, q3 = graphy.louvain.optimize_modularity(randgraph, rand_init=False)
     _, q4 = graphy.louvain.optimize_modularity(randgraph, rand_init=False)
     assert(q3==q4)
+
 def test_louvain_sparse():
     """
-    Test optimize modularity returns same results if passing sparse/dense matrix
+    Test whether optimize modularity returns same results if passing sparse/dense matrix
     """
     from numpy.random import seed
     A = sp.rand(100, 100, .1, 'lil')
@@ -98,3 +99,27 @@ def test_louvain_sparse():
     m2, q2 = graphy.louvain.optimize_modularity(Ad, rand_init=False)
     assert np.allclose(m1, m2), "memberships differ"
     assert np.isclose(q1, q2), "modularity differs"
+
+
+def test_modularity_vals():
+    """
+    Test returned modularity values
+    """
+    G=nx.to_numpy_matrix(nx.karate_club_graph())
+    membership = np.zeros(G.shape[0])
+
+    # Communities reported by Zachary
+    membership[[0,1,2,3,4,5,6,7,10,11,12,13,16,17,19,21]] = 1
+
+    qObj = graphy.qualityfuncs.Modularity(G)
+    q = qObj.quality(membership)
+    
+    # 0.371 value reported in:    
+    # Donetti, Munoz, Detecting Network Communities: a new systematic 
+    #   and efficient algorithm, 2004, http://arxiv.org/pdf/cond-mat/0404652.pdf
+    assert(np.isclose(q, 0.371, atol=5e-4))
+
+    # Directed modularity should still work for undirected graphs
+    qObj2 = graphy.qualityfuncs.DirectedModularity(G)
+    q2 = qObj2.quality(membership)
+    assert(np.isclose(q2, 0.371, atol=5e-4))
