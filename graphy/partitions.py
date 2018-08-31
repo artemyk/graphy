@@ -221,7 +221,7 @@ def greedy_search(qualityfunc, N, initial_membership=None, num_runs=1, debug_lev
             if len(c_nodes) <= 1:
                 return
 
-            about_half = (len(c_nodes)+1)/2
+            about_half = int((len(c_nodes)+1)/2)
             new_comm = max(membership)+1
             for _ in range(10):
                 random.shuffle(c_nodes)
