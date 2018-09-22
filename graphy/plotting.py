@@ -8,15 +8,11 @@ import numpy as np
 import networkx as nx
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
 from matplotlib import cm
-from matplotlib.patches import Ellipse
-from scipy.spatial.distance import cdist
-
 
 def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04, 
-  edgescale=1.0, nodeopts={}, labelopts={}, arrowopts={}, bidir_arrows=True,
-  cmap='Paired',
+  edgescale=1.0, nodeopts={}, labelopts={}, arrowopts={}, 
+  bidir_arrows=True, cmap='Paired',
   ):
   """Plot a graphs.  Supports both directed and undirected graphs.
   Undirected edges are drawn as lines while directed edges are drawn
@@ -41,7 +37,7 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
   pos : dict
       Dict specifying positions of nodes, as in {node: (x,y).  If not provided, 
       nodes are arranged along a circle.
-  colors : list of ints (default None)
+  colors : list of ints or list of RGBA values (default None)
       Color(s) to use for node faces, if desired.
   node_labels : list of strings (default None)
       Labels to use for node labels, if desired.
@@ -105,8 +101,10 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
 
   colors = np.asarray(colors)
 
-  cmap_helper = MplColorHelper(cmap, colors.min(), colors.max())
-  
+  if colors.ndim == 1 or colors.shape[1] != 4:
+      cmap_helper = MplColorHelper(cmap, colors.min(), colors.max())
+      colors = np.asarray([cmap_helper.get_rgb(c) for c in colors])
+                                   
   bbox = plt.gca().get_window_extent() 
   asp_ratio = bbox.width/bbox.height
 
@@ -183,9 +181,8 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
 
   for ndx, xy in enumerate(xys):  # Plot nodes
       cnode = plt.Circle((xy[0],xy[1]), radius=node_size, ec='none',
-                         color=cmap_helper.get_rgb(colors[ndx]), **nodeopts)
+                         color=colors[ndx], **nodeopts)
       plt.gca().add_artist(cnode)
       if node_labels is not None:
           plt.text(xy[0],xy[1], node_labels[ndx], ha='center', va='center', 
                    **labelopts)
-        
