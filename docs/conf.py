@@ -33,37 +33,22 @@ sys.path.append(os.path.abspath('sphinxext'))
 # ones.
 # 'matplotlib.sphinxext.ipython_directive',
 extensions = [
-    'matplotlib.sphinxext.mathmpl',
-    'matplotlib.sphinxext.only_directives',
-    'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
-    'sphinx.ext.pngmath',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
+    'matplotlib.sphinxext.only_directives',
+    'matplotlib.sphinxext.plot_directive',
+    'ipython_console_highlighting',
+    'numpydoc',
+    'sphinx_autorun',
 ]
 
-# 'sphinx.ext.autosummary',
 numpydoc_show_class_members = False
-
-extensions += [
-          #'matplotlib.sphinxext.mathmpl',
-          'matplotlib.sphinxext.only_directives',
-          'matplotlib.sphinxext.plot_directive',
-          'sphinx.ext.autodoc',
-          'sphinx.ext.doctest',
-          'ipython_console_highlighting',
-          # 'inheritance_diagram', 
-          'numpydoc']
-          # 'matplotlib.sphinxext.ipython_directive',
-             
-extensions += [
-	'sphinxcontrib.autorun'
-]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
