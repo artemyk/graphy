@@ -178,11 +178,15 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
                       endxy[0]-startxy[0], endxy[1]-startxy[1], **arrowdict)
 
         
+  cnodeopts = {'ec':'none', 'radius':node_size}
+  for k, v in nodeopts.items():
+    cnodeopts[k] = v
+  clabelopts = {'ha':'center', 'va':'center'}
+  for k, v in labelopts.items():
+    clabelopts[k] = v
 
   for ndx, xy in enumerate(xys):  # Plot nodes
-      cnode = plt.Circle((xy[0],xy[1]), radius=node_size, ec='none',
-                         color=colors[ndx], **nodeopts)
+      cnode = plt.Circle((xy[0],xy[1]), color=colors[ndx], **cnodeopts)
       plt.gca().add_artist(cnode)
       if node_labels is not None:
-          plt.text(xy[0],xy[1], node_labels[ndx], ha='center', va='center', 
-                   **labelopts)
+          plt.text(xy[0],xy[1], node_labels[ndx], **labelopts)
