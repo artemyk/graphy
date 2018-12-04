@@ -143,8 +143,10 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
       head_scale = node_size*0.5
     else:
       head_scale = 0
-    arrowdict['head_length'] = head_scale
-    arrowdict['head_width']  = head_scale
+    if 'head_length' not in arrowdict:
+      arrowdict['head_length'] = head_scale
+    if 'head_width' not in arrowdict:
+      arrowdict['head_width']  = head_scale
 
     if edge[0] == edge[1]:
         loopoffset = np.sign(startxy - xys.mean(axis=0)) * node_size * 1.05
