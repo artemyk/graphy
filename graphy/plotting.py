@@ -9,10 +9,12 @@ import networkx as nx
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import cm
+import matplotlib.cbook as cbook
+
 
 def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04, 
   edgescale=1.0, nodeopts={}, labelopts={}, arrowopts={}, 
-  bidir_arrows=True, cmap='Paired',
+  bidir_arrows=True, cmap='Paired', vmin=None, vmax=None,
   ):
   """Plot a graphs.  Supports both directed and undirected graphs.
   Undirected edges are drawn as lines while directed edges are drawn
@@ -57,6 +59,11 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
       nodes are connected bidirectionally.
   cmap : string (default 'Paired')
       Name of colormap to use.
+  vmin : float (default is minimum of colors)
+      Starting value to use for colormap.
+  vmax : float (default is minimum of colors)
+      Ending value to use for colormap.
+  
   """
 
 
@@ -90,6 +97,10 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
   elif not isinstance(G, nx.Graph):
     raise ValueError('Unknown type of graph: %s' % str(type(G)))
 
+  arrowopts = cbook.normalize_kwargs(arrowopts, mpl.patches.Arrow)
+  nodeopts = cbook.normalize_kwargs(nodeopts, plt.Circle)
+  labelopts = cbook.normalize_kwargs(labelopts, mpl.text.Text)
+
   if pos is None:
     pos = nx.circular_layout(G)
 
@@ -101,8 +112,12 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
 
   colors = np.asarray(colors)
 
-  if colors.ndim == 1 or colors.shape[1] != 4:
-      cmap_helper = MplColorHelper(cmap, colors.min(), colors.max())
+  if colors.ndim == 1 or colors.shape[1] not in (3, 4):
+      if vmin is None:
+        vmin = colors.min()
+      if vmax is None:
+        vmax = colors.max()
+      cmap_helper = MplColorHelper(cmap, vmin, vmax)
       colors = np.asarray([cmap_helper.get_rgb(c) for c in colors])
                                    
   bbox = plt.gca().get_window_extent() 
@@ -125,18 +140,17 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
   except KeyError:
     edge_weights = {}
       
-  arrowdict = dict(ec='k', fc='k', 
-      length_includes_head=True, 
-      shape='full')
-  for k, v in arrowopts.items():
-      arrowdict[k] = v
-
   for edge in G.edges():
     startxy = xys[node_map[edge[0]],:].copy()
     endxy   = xys[node_map[edge[1]],:].copy()
 
-    arrowdict['lw'] = edge_weights.get(edge,1.0)*edgescale
-
+    arrowdict = dict(length_includes_head=True, 
+                     shape='full',
+                     linewidth=edge_weights.get(edge,1.0)*edgescale)
+    if 'color' not in arrowopts:
+        arrowdict.update({'edgecolor':'k', 'facecolor':'k'})
+    arrowdict.update(arrowopts)
+  
     headscale = node_size*0.5 
     has_reverse = (edge[1], edge[0]) in G.edges()
     if G.is_directed() and (not has_reverse or bidir_arrows):
@@ -151,7 +165,7 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
     if edge[0] == edge[1]:
         loopoffset = np.sign(startxy - xys.mean(axis=0)) * node_size * 1.05
         cloop = plt.Circle(startxy+loopoffset, radius=node_size*0.65, 
-                           ec='k', fill=False, lw=arrowdict['lw'])
+                           edgecolor='k', fill=False, linewidth=arrowdict['linewidth'])
         plt.gca().add_artist(cloop)
         arrowloc = intersect_two_circles(startxy, node_size, 
                                          startxy+loopoffset, node_size*0.7)
@@ -180,15 +194,17 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
                       endxy[0]-startxy[0], endxy[1]-startxy[1], **arrowdict)
 
         
-  cnodeopts = {'ec':'none', 'radius':node_size}
-  for k, v in nodeopts.items():
-    cnodeopts[k] = v
-  clabelopts = {'ha':'center', 'va':'center'}
-  for k, v in labelopts.items():
-    clabelopts[k] = v
+  clabelopts = {'horizontalalignment': 'center', 
+                'verticalalignment': 'center'}
+  clabelopts.update(labelopts)
 
   for ndx, xy in enumerate(xys):  # Plot nodes
-      cnode = plt.Circle((xy[0],xy[1]), color=colors[ndx], **cnodeopts)
+      cnodeopts = {'radius': node_size}
+      if 'color' not in 'nodeopts':
+         cnodeopts.update({'edgecolor': 'none', 'facecolor': colors[ndx]})
+      cnodeopts.update(nodeopts)
+
+      cnode = plt.Circle((xy[0],xy[1]), **cnodeopts)
       plt.gca().add_artist(cnode)
       if node_labels is not None:
-          plt.text(xy[0],xy[1], node_labels[ndx], **labelopts)
+          plt.text(xy[0],xy[1], node_labels[ndx], **clabelopts)

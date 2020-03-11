@@ -84,6 +84,10 @@ def test_plotting_of_gen_graph():
     colors = np.array([[0,0,0,0] for _ in range(len(G))])
     graphy.plotting.plot_graph(G, pos=pos, colors=colors)
 
+    graphy.plotting.plot_graph(G, pos=pos, nodeopts={'fc':'k'})
+    graphy.plotting.plot_graph(G, pos=pos, arrowopts={'fc':'k'})
+
+
 def test_louvain_randomization():
     randgraph = (np.random.rand(50,50) > 0.7).astype('int')
     _, q1 = graphy.louvain.optimize_modularity(randgraph, rand_init=True)

@@ -16,6 +16,7 @@ import networkx as nx
 import numpy as np
 import itertools
 import scipy
+import collections
 
 def gen_ring_matrix(N, neighs_per_side=1):
     """Generate a ring-lattice matrix.
@@ -71,8 +72,9 @@ def get_clique_of_rings_net_and_pos(sizes, neighs_per_side=1, ring_weight=1.0, c
     ----------
     sizes : list of int
         How many nodes in each ring.
-    neighs_per_side : int (default 1)
+    neighs_per_side : int or list (default 1)
         For nodes in ring lattices, how many neighbors on each side to connect to.
+        If list, specifying the neighbors on each side within the corresponding ring.
     ring_weight : float (default 1.0)
         Strength of connections in each ring lattice.
     clique_weight : float (default 1.0)
@@ -106,7 +108,12 @@ def get_clique_of_rings_net_and_pos(sizes, neighs_per_side=1, ring_weight=1.0, c
         for i in range(s):
             pos[offset+i] = nodepos[i]
 
-        mx[offset:offset+s,offset:offset+s] = ring_weight * gen_ring_matrix(s, neighs_per_side)
+        if isinstance(neighs_per_side, collections.Iterable):
+            cneighbors = neighs_per_side[ndx]
+        else:
+            cneighbors = neighs_per_side
+            
+        mx[offset:offset+s,offset:offset+s] = ring_weight * gen_ring_matrix(s, cneighbors)
         offset+=s
 
     for i in interconnect_nodes:
