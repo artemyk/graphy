@@ -147,7 +147,11 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
     arrowdict = dict(length_includes_head=True, 
                      shape='full',
                      linewidth=edge_weights.get(edge,1.0)*edgescale)
-    if 'color' not in arrowopts:
+
+    if 'edgecolor' in G.edges[edge]:
+      ec = G.edges[edge]['edgecolor']
+      arrowdict.update({'edgecolor':ec, 'facecolor':ec})
+    elif 'color' not in arrowopts:
         arrowdict.update({'edgecolor':'k', 'facecolor':'k'})
     arrowdict.update(arrowopts)
   
