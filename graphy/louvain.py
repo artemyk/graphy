@@ -53,7 +53,7 @@ def optimize_modularity(conn_mx, rand_init=True, num_runs=1, debug=False, errort
     >>> import networkx as nx
     >>> from graphy.louvain import optimize_modularity
     >>> G = nx.karate_club_graph()
-    >>> best_membership, q = optimize_modularity(nx.to_numpy_matrix(G))
+    >>> best_membership, q = optimize_modularity(nx.to_numpy_array(G))
     >>> print(best_membership, q)   # doctest: +SKIP
 
 

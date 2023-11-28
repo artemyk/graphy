@@ -93,7 +93,7 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
     return np.array([ix, iy])
 
   if isinstance(G, (np.ndarray, np.generic) ):
-    G = nx.from_numpy_matrix(G, create_using=nx.DiGraph())
+    G = nx.DiGraph(np.array(G))
   elif not isinstance(G, nx.Graph):
     raise ValueError('Unknown type of graph: %s' % str(type(G)))
 
@@ -107,7 +107,10 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
   if colors is None:
     colors = 1
 
-  if not isinstance(colors, collections.Iterable):
+  # check if colors is iterable
+  try:
+    iter(colors)
+  except TypeError:
     colors = [colors,] * G.number_of_nodes()
 
   colors = np.asarray(colors)

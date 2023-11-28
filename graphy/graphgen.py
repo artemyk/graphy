@@ -16,7 +16,6 @@ import networkx as nx
 import numpy as np
 import itertools
 import scipy
-import collections
 
 def gen_ring_matrix(N, neighs_per_side=1):
     """Generate a ring-lattice matrix.
@@ -108,9 +107,10 @@ def get_clique_of_rings_net_and_pos(sizes, neighs_per_side=1, ring_weight=1.0, c
         for i in range(s):
             pos[offset+i] = nodepos[i]
 
-        if isinstance(neighs_per_side, collections.Iterable):
+        try: # check if iterable
+            iter(neighs_per_side)
             cneighbors = neighs_per_side[ndx]
-        else:
+        except TypeError:
             cneighbors = neighs_per_side
             
         mx[offset:offset+s,offset:offset+s] = ring_weight * gen_ring_matrix(s, cneighbors)
@@ -121,7 +121,7 @@ def get_clique_of_rings_net_and_pos(sizes, neighs_per_side=1, ring_weight=1.0, c
 
     np.fill_diagonal(mx, 0)
 
-    return nx.from_numpy_matrix(mx), pos
+    return nx.DiGraph(np.array(mx)), pos
 
 
 def gen_hierarchical_net(n, level):

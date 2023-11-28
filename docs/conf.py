@@ -41,9 +41,8 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'matplotlib.sphinxext.only_directives',
     'matplotlib.sphinxext.plot_directive',
-    'ipython_console_highlighting',
+    # 'ipython_console_highlighting',
     'numpydoc',
     'sphinx_autorun',
 ]
@@ -64,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'graphy'
-copyright = u'2013-2015, Artemy Kolchinsky'
+copyright = u'2013-2023, Artemy Kolchinsky'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -294,7 +293,7 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
+intersphinx_mapping = {'<name>': ('http://docs.python.org/', None)}
 
 autodoc_member_order = 'bysource'
 
