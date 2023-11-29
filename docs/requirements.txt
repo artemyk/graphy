@@ -1,0 +1,7 @@
+numpy
+scipy
+six
+matplotlib
+numpydoc
+sphinx-autorun
+
