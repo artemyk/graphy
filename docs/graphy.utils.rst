@@ -1,3 +1,5 @@
+:tocdepth: 2
+
 graphy.utils - Module with utilities for working with graphs
 ============================================================
 

@@ -1,3 +1,5 @@
+:tocdepth: 2
+
 graphy.graphgen - Module to generate structured graphs
 ======================================================
 

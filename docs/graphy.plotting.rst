@@ -1,3 +1,5 @@
+:tocdepth: 2
+
 graphy.plotting - Module with graphical plotting functions
 ==========================================================
 

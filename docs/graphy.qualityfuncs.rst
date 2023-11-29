@@ -1,3 +1,5 @@
+:tocdepth: 2
+
 graphy.qualityfuncs - Module defining quality functions
 =======================================================
 

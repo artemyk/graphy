@@ -1,3 +1,5 @@
+:tocdepth: 2
+
 graphy.partitions - Module to search over partitions
 ====================================================
 
