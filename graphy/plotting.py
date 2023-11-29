@@ -215,3 +215,5 @@ def plot_graph(G, pos=None, colors=None, node_labels=None, node_size=0.04,
       plt.gca().add_artist(cnode)
       if node_labels is not None:
           plt.text(xy[0],xy[1], node_labels[ndx], **clabelopts)
+
+
